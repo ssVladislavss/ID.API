@@ -20,12 +20,15 @@ namespace ID.Core.Clients
             ConfigurationDbContext configurationContext = scope.ServiceProvider.GetRequiredService<ConfigurationDbContext>();
             configurationContext.Database.Migrate();
 
-            var defaultClient = DefaultClient.ServiceID;
+            var defaultClients = DefaultClient.Clients;
 
-            var existDefaultClient = configurationContext.Clients.FirstOrDefault(x => x.ClientId == defaultClient.ClientId);
-            if (existDefaultClient == null)
+            foreach (var client in defaultClients)
             {
-                configurationContext.Clients.Add(defaultClient.ToEntity());
+                var existDefaultClient = configurationContext.Clients.FirstOrDefault(x => x.ClientId == client.ClientId);
+                if (existDefaultClient == null)
+                {
+                    configurationContext.Clients.Add(client.ToEntity());
+                }
             }
 
             if (!configurationContext.IdentityResources.Any())
@@ -37,15 +40,21 @@ namespace ID.Core.Clients
                 configurationContext.IdentityResources.Add(DefaultIdentityResource.ProfileResource.ToEntity());
             }
 
-            var defaultApiScope = DefaultApiScope.ServiceID;
+            var defaultApiScopes = DefaultApiScope.Scopes;
 
-            if (!configurationContext.ApiScopes.Any(x => x.Name == defaultApiScope.Name))
-                configurationContext.Add(defaultApiScope.ToEntity());
+            foreach (var apiScope in defaultApiScopes)
+            {
+                if (!configurationContext.ApiScopes.Any(x => x.Name == apiScope.Name))
+                    configurationContext.Add(apiScope.ToEntity());
+            }
 
-            var defaultApiResource = DefaultApiResource.ServiceID;
+            var defaultApiResources = DefaultApiResource.Resources;
 
-            if (!configurationContext.ApiResources.Any(x => x.Name == defaultApiResource.Name))
-                configurationContext.Add(defaultApiResource.ToEntity());
+            foreach (var recource in defaultApiResources)
+            {
+                if (!configurationContext.ApiResources.Any(x => x.Name == recource.Name))
+                    configurationContext.Add(recource.ToEntity());
+            }
 
             await configurationContext.SaveChangesAsync();
         }
