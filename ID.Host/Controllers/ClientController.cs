@@ -4,13 +4,16 @@ using ID.Core.Clients.Abstractions;
 using ID.Host.Infrastracture;
 using ID.Host.Infrastracture.Mapping;
 using ID.Host.Infrastracture.Models.Clients;
+using IdentityServer4.AccessTokenValidation;
 using IdentityServer4.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ID.Host.Controllers
 {
     [Route("api/clients")]
     [ApiController]
+    [Authorize(AuthenticationSchemes = IdentityServerAuthenticationDefaults.AuthenticationScheme)]
     public class ClientController : ControllerBase
     {
         private readonly IClientService _clientService;

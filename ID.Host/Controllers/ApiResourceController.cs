@@ -5,11 +5,14 @@ using Microsoft.AspNetCore.Mvc;
 using ID.Core.ApiResources;
 using ID.Host.Infrastracture.Models.ApiResources;
 using ID.Host.Infrastracture.Mapping;
+using IdentityServer4.AccessTokenValidation;
+using Microsoft.AspNetCore.Authorization;
 
 namespace ID.Host.Controllers
 {
     [Route("api/apiresource")]
     [ApiController]
+    [Authorize(AuthenticationSchemes = IdentityServerAuthenticationDefaults.AuthenticationScheme)]
     public class ApiResourceController : ControllerBase
     {
         private readonly IApiResourceService _apiResourceService;

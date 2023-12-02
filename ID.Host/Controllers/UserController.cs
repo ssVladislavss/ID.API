@@ -3,12 +3,15 @@ using ID.Core.Users;
 using ID.Core.Users.Abstractions;
 using ID.Host.Infrastracture;
 using ID.Host.Infrastracture.Models.Users;
+using IdentityServer4.AccessTokenValidation;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ID.Host.Controllers
 {
     [Route("api/users")]
     [ApiController]
+    [Authorize(AuthenticationSchemes = IdentityServerAuthenticationDefaults.AuthenticationScheme)]
     public class UserController : ControllerBase
     {
         private readonly IUserService _userService;

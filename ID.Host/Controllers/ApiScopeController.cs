@@ -3,13 +3,16 @@ using ID.Core.ApiScopes.Abstractions;
 using ID.Host.Infrastracture;
 using ID.Host.Infrastracture.Mapping;
 using ID.Host.Infrastracture.Models.ApiScopes;
+using IdentityServer4.AccessTokenValidation;
 using IdentityServer4.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ID.Host.Controllers
 {
     [Route("api/apiscope")]
     [ApiController]
+    [Authorize(AuthenticationSchemes = IdentityServerAuthenticationDefaults.AuthenticationScheme)]
     public class ApiScopeController : ControllerBase
     {
         private readonly IApiScopeService _apiScopeService;

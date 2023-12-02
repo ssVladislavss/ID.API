@@ -12,10 +12,12 @@ using ID.Data.EF;
 using ID.Data.EF.Repositories;
 using ID.Host.Infrastracture;
 using IdentityModel;
+using IdentityServer4.AccessTokenValidation;
 using IdentityServer4.AspNetIdentity;
 using IdentityServer4.EntityFramework.DbContexts;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using System.Reflection;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -131,6 +133,23 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddCors();
+
+builder.Services.AddAuthentication(IdentityServerAuthenticationDefaults.AuthenticationScheme)
+                .AddJwtBearer(IdentityServerAuthenticationDefaults.AuthenticationScheme, options =>
+                {
+                    options.Authority = "https://localhost:44338";
+                    options.SaveToken = true;
+                    options.Audience = "localhost:44338";
+                    options.RequireHttpsMetadata = false;
+                    options.ClaimsIssuer = "identity_server";
+                    options.TokenValidationParameters = new TokenValidationParameters
+                    {
+                        ValidateAudience = false,
+                        NameClaimType = JwtClaimTypes.Name,
+                        RoleClaimType = JwtClaimTypes.Role,
+                        ClockSkew = TimeSpan.Zero
+                    };
+                });
 
 var app = builder.Build();
 
