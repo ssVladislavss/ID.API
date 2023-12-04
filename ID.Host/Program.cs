@@ -11,6 +11,7 @@ using ID.Data.Configurations.Users.Profile;
 using ID.Data.EF;
 using ID.Data.EF.Repositories;
 using ID.Host.Infrastracture;
+using ID.Host.Infrastracture.Middlewares.Exceptions;
 using IdentityModel;
 using IdentityServer4.AccessTokenValidation;
 using IdentityServer4.AspNetIdentity;
@@ -158,6 +159,8 @@ await Task.Run(async () =>
     await ClientService.StartInitializerAsync(app.Services);
     await UserService.StartInitializerAsync(app.Services);
 }).ConfigureAwait(false);
+
+app.UseMiddleware<ExceptionHandlerMiddleware>();
 
 if (app.Environment.IsDevelopment())
 {

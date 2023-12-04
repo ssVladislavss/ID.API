@@ -87,7 +87,7 @@ namespace ID.Core.ApiResources
             var apiResource = await _apiResourceRepository.FindAsync(id, token)
                 ?? throw new ApiResourceRemoveException($"RemoveAsync: api resource (ResourceId - {id}) was not found");
 
-            await _apiResourceRepository.RemoveAsync(id, token);
+            await _apiResourceRepository.RemoveAsync(apiResource.Id, token);
         }
     }
 }

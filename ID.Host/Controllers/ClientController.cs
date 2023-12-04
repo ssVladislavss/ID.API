@@ -11,7 +11,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace ID.Host.Controllers
 {
-    [Route("api/clients")]
+    [Route("api/client")]
     [ApiController]
     [Authorize(AuthenticationSchemes = IdentityServerAuthenticationDefaults.AuthenticationScheme)]
     public class ClientController : ControllerBase

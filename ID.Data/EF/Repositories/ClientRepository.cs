@@ -173,7 +173,7 @@ namespace ID.Data.EF.Repositories
             if (_includeProps != null)
                 query = _includeProps.Aggregate(query, (current, incProp) => current.Include(incProp));
 
-            var clients = await query.ToListAsync();
+            var clients = await query.ToListAsync(cancellationToken: token);
 
             return clients.Select(x => x.ToModel());
         }
