@@ -19,7 +19,7 @@ namespace ID.Core.Clients.Default
                 },
 
                 ClientId = "9C014C46-7A09-49A5-8264-99CD83495D28",
-                ClientSecrets = { new Secret("4A534858408B41FFADE3FBC533CEE00E".ToSha256()) },
+                ClientSecrets = { new Secret("4A534858408B41FFADE3FBC533CEE00E".ToSha256(), "4A534858408B41FFADE3FBC533CEE00E") },
                 AllowedGrantTypes = GrantTypes.ResourceOwnerPasswordAndClientCredentials,
                 AllowedCorsOrigins = { "https://localhost:44338", "https://localhost:44333" },
                 RedirectUris = { },
@@ -50,7 +50,7 @@ namespace ID.Core.Clients.Default
                 },
 
                 ClientId = "32c2c3a8-b8ed-4cbd-8e36-c8312fab0cc2",
-                ClientSecrets = { new Secret("330c4cee9b674891b02ead42cc4a4d89".ToSha256()) },
+                ClientSecrets = { new Secret("330c4cee9b674891b02ead42cc4a4d89".ToSha256(), "330c4cee9b674891b02ead42cc4a4d89") },
                 AllowedGrantTypes = GrantTypes.ResourceOwnerPasswordAndClientCredentials,
                 AllowedCorsOrigins = { "https://localhost:44333" },
                 RedirectUris = { },
