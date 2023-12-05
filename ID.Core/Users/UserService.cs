@@ -3,6 +3,7 @@ using ID.Core.Users.Exceptions;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using static IdentityServer4.Models.IdentityResources;
 
 namespace ID.Core.Users
 {
@@ -15,7 +16,6 @@ namespace ID.Core.Users
         public UserService
             (UserManager<UserID> userManager,
              RoleManager<IdentityRole> roleManager,
-             IUserStore<UserID> userRoleStore,
              IOptions<IdentityOptions>? identityDescriptor = null)
         {
             _userManager = userManager ?? throw new ArgumentNullException(nameof(userManager));
@@ -29,8 +29,15 @@ namespace ID.Core.Users
             if (nowUser != null)
                 throw new UserAddException($"AddAsync: user (Email - {data.User.Email}) was found");
 
-            var role = await _roleManager.FindByNameAsync(data.RoleName)
-                ?? throw new UserAddException($"AddAsync: role (RoleName - {data.RoleName}) was not found");
+            List<IdentityRole> roles = new List<IdentityRole>();
+
+            foreach (var roleName in data.RoleNames)
+            {
+                var role = await _roleManager.FindByNameAsync(roleName)
+                      ?? throw new UserAddException($"AddAsync: role (RoleName - {roleName}) was not found");
+
+                roles.Add(role);
+            }
 
             if (string.IsNullOrEmpty(data.Password))
                 data.Password = UserID.CreatePassword(_identityOptions.Password.RequiredLength);
@@ -41,16 +48,28 @@ namespace ID.Core.Users
                     ($"AddAsync: user (Email - {data.User.Email})," +
                     $" {string.Concat(addingResult.Errors.Select(x => $"{x.Code} - {x.Description}, ")).TrimEnd(' ', ',')}");
 
-            var addingToRoleResult = await _userManager.AddToRoleAsync(data.User, role.Name);
+            var addingToRoleResult = await _userManager.AddToRolesAsync(data.User, roles.Select(x => x.Name));
             if (!addingResult.Succeeded)
             {
                 await _userManager.DeleteAsync(data.User);
 
-                throw new UserAddException($"AddAsync: error adding user to role (Email - {data.User.Email}, Role - {role})," +
+                throw new UserAddException($"AddAsync: error adding user to role" +
+                    $" (Email - {data.User.Email}, Roles - {string.Join(',', data.RoleNames)})," +
                     $" {string.Concat(addingToRoleResult.Errors.Select(x => $"{x.Code} - {x.Description}, ")).TrimEnd(' ', ',')}");
             }
 
-            return new CreateUserResult(data.User, role, data.Password);
+            return new CreateUserResult(data.User, roles, data.Password);
+        }
+
+        public async Task DeleteAsync(string userId, Iniciator iniciator, CancellationToken token = default)
+        {
+            var user = await _userManager.FindByIdAsync(userId)
+                ?? throw new UserDeleteException($"DeleteAsync: user (UserId - {userId}) was not found");
+
+            var deleteResult = await _userManager.DeleteAsync(user);
+            if (!deleteResult.Succeeded)
+                throw new UserDeleteException($"DeleteAsync: user (UserId - {userId}) error deleting. " +
+                    $"{string.Join(',', deleteResult.Errors.Select(x => $"{x.Code} - {x.Description}"))}");
         }
 
         public async Task<UserInfo> FindByEmailAsync(string email, Iniciator iniciator, CancellationToken token = default)
@@ -204,6 +223,24 @@ namespace ID.Core.Users
             }
 
             return usersInfo;
+        }
+
+        public async Task UpdateAsync(UserID user, Iniciator iniciator, CancellationToken token = default)
+        {
+            var currentUser = await _userManager.FindByIdAsync(user.Id)
+                ?? await _userManager.FindByEmailAsync(user.Email)
+                ?? throw new UserEditException($"UpdateAsync: user (Id - {user.Id}, Email - {user.Email}) was not found");
+
+            currentUser.LastName = user.LastName;
+            currentUser.FirstName = user.FirstName;
+            currentUser.SecondName = user.SecondName;
+            currentUser.BirthDate = user.BirthDate;
+            currentUser.AvailableFunctionality = user.AvailableFunctionality;
+
+            var updateResult = await _userManager.UpdateAsync(currentUser);
+            if (!updateResult.Succeeded)
+                throw new UserEditException($"UpdateAsync: user (Id - {user.Id}, Email - {user.Email}) error updating. " +
+                    $"{string.Join(',', updateResult.Errors.Select(x => $"{x.Code} - {x.Description}"))}");
         }
     }
 }

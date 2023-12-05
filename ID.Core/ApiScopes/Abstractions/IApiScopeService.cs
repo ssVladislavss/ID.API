@@ -2,8 +2,8 @@
 {
     public interface IApiScopeService
     {
-        Task<IEnumerable<IDApiScope>> GetAsync(Iniciator iniciator, CancellationToken token = default);
-        Task<IEnumerable<IDApiScope>> GetAsync(ApiScopeSearchFilter filter, Iniciator iniciator, CancellationToken token = default);
+        Task<IEnumerable<IDApiScope>> GetAsync(Iniciator iniciator, bool includeStandartScopes = false, CancellationToken token = default);
+        Task<IEnumerable<IDApiScope>> GetAsync(ApiScopeSearchFilter filter, Iniciator iniciator, bool includeStandartScopes = false, CancellationToken token = default);
         Task<IDApiScope> FindAsync(int id, Iniciator iniciator, CancellationToken token = default);
         Task<IDApiScope> FindByNameAsync(string name, Iniciator iniciator, CancellationToken token = default);
         Task<IDApiScope> AddAsync(IDApiScope apiScope, Iniciator iniciator, CancellationToken token = default);

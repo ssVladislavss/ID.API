@@ -45,5 +45,20 @@ namespace ID.Host.Infrastracture.Models.Users
             BirthDate = userInfo.User.BirthDate;
             Roles = userInfo.Roles.Select(x => new UserRoleViewModel(x));
         }
+
+        public UserViewModel(CreateUserResult createResult)
+        {
+            Id = createResult.CreatedUser.Id;
+            Email = createResult.CreatedUser.Email;
+            EmailConfirmed = createResult.CreatedUser.EmailConfirmed;
+            Phone = createResult.CreatedUser.PhoneNumber;
+            PhoneConfirmed = createResult.CreatedUser.PhoneNumberConfirmed;
+            UserName = createResult.CreatedUser.UserName;
+            LastName = createResult.CreatedUser.LastName;
+            FirstName = createResult.CreatedUser.FirstName;
+            SecondName = createResult.CreatedUser.SecondName;
+            BirthDate = createResult.CreatedUser.BirthDate;
+            Roles = createResult.UserRoles.Select(x => new UserRoleViewModel(x));
+        }
     }
 }

@@ -34,7 +34,7 @@ namespace ID.Host.Controllers
                     scopesFilter = scopesFilter.WithName(filter.Name);
             }
 
-            var apiScopes = await _apiScopeService.GetAsync(scopesFilter, new Core.Iniciator(), HttpContext.RequestAborted);
+            var apiScopes = await _apiScopeService.GetAsync(scopesFilter, new Core.Iniciator(), true, HttpContext.RequestAborted);
 
             return Ok(AjaxResult<IEnumerable<IDApiScope>>.Success(apiScopes));
         }

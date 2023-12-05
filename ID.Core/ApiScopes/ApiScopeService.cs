@@ -1,6 +1,7 @@
 ﻿using ID.Core.ApiScopes.Abstractions;
 using ID.Core.ApiScopes.Exceptions;
 using ID.Core.ApiScopes.Extensions;
+using IdentityServer4;
 
 namespace ID.Core.ApiScopes
 {
@@ -62,9 +63,20 @@ namespace ID.Core.ApiScopes
             return scope ?? throw new ApiScopeNotFoundException($"FindByNameAsync: api scope (ScopeName - {name}) was not found");
         }
 
-        public async Task<IEnumerable<IDApiScope>> GetAsync(Iniciator iniciator, CancellationToken token = default)
+        public async Task<IEnumerable<IDApiScope>> GetAsync(Iniciator iniciator, bool includeStandartScopes = false, CancellationToken token = default)
         {
-            var scopes = await _apiScopeRepository.GetAsync(token);
+            List<IDApiScope> scopes = new();
+
+            if (includeStandartScopes)
+                scopes.AddRange(new[]
+                {
+                    new IDApiScope(0, new IdentityServer4.Models.ApiScope(IdentityServerConstants.StandardScopes.OpenId)),
+                    new IDApiScope(0, new IdentityServer4.Models.ApiScope(IdentityServerConstants.StandardScopes.Profile)),
+                    new IDApiScope(0, new IdentityServer4.Models.ApiScope(IdentityServerConstants.StandardScopes.Email)),
+                    new IDApiScope(0, new IdentityServer4.Models.ApiScope(IdentityServerConstants.StandardScopes.OfflineAccess))
+                });
+
+            scopes.AddRange(await _apiScopeRepository.GetAsync(token));
 
             if(!scopes.Any())
                 throw new ApiScopeNoContentException($"GetAsync: the api scope table does not contain any records");
@@ -72,9 +84,20 @@ namespace ID.Core.ApiScopes
             return scopes;
         }
 
-        public async Task<IEnumerable<IDApiScope>> GetAsync(ApiScopeSearchFilter filter, Iniciator iniciator, CancellationToken token = default)
+        public async Task<IEnumerable<IDApiScope>> GetAsync(ApiScopeSearchFilter filter, Iniciator iniciator, bool includeStandartScopes = false, CancellationToken token = default)
         {
-            var scopes = await _apiScopeRepository.GetAsync(filter, token);
+            List<IDApiScope> scopes = new();
+
+            if (includeStandartScopes)
+                scopes.AddRange(new[]
+                {
+                    new IDApiScope(0, new IdentityServer4.Models.ApiScope(IdentityServerConstants.StandardScopes.OpenId)),
+                    new IDApiScope(0, new IdentityServer4.Models.ApiScope(IdentityServerConstants.StandardScopes.Profile)),
+                    new IDApiScope(0, new IdentityServer4.Models.ApiScope(IdentityServerConstants.StandardScopes.Email)),
+                    new IDApiScope(0, new IdentityServer4.Models.ApiScope(IdentityServerConstants.StandardScopes.OfflineAccess))
+                });
+
+            scopes.AddRange(await _apiScopeRepository.GetAsync(filter, token));
 
             if (!scopes.Any())
                 throw new ApiScopeNoContentException($"GetAsync: the api scope table does not contain any records by filter (Filter - {filter})");

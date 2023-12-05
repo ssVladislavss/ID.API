@@ -5,13 +5,13 @@ namespace ID.Core.Users
     public class CreateUserResult
     {
         public UserID CreatedUser { get; }
-        public IdentityRole UserRole { get; }
+        public IEnumerable<IdentityRole> UserRoles { get; }
         public string Password { get; }
 
-        public CreateUserResult(UserID createdUser, IdentityRole userRole, string password)
+        public CreateUserResult(UserID createdUser, IEnumerable<IdentityRole> userRoles, string password)
         {
             this.CreatedUser = createdUser;
-            this.UserRole = userRole;
+            this.UserRoles = userRoles ?? Enumerable.Empty<IdentityRole>();
             this.Password = password;
         }
     }

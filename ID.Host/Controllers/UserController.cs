@@ -2,6 +2,7 @@
 using ID.Core.Users;
 using ID.Core.Users.Abstractions;
 using ID.Host.Infrastracture;
+using ID.Host.Infrastracture.Mapping;
 using ID.Host.Infrastracture.Models.Users;
 using IdentityServer4.AccessTokenValidation;
 using Microsoft.AspNetCore.Authorization;
@@ -11,7 +12,7 @@ namespace ID.Host.Controllers
 {
     [Route("api/users")]
     [ApiController]
-    [Authorize(AuthenticationSchemes = IdentityServerAuthenticationDefaults.AuthenticationScheme)]
+    //[Authorize(AuthenticationSchemes = IdentityServerAuthenticationDefaults.AuthenticationScheme)]
     public class UserController : ControllerBase
     {
         private readonly IUserService _userService;
@@ -69,6 +70,30 @@ namespace ID.Host.Controllers
             var userInfo = await _userService.FindByNameAsync(userName, new Iniciator(), HttpContext.RequestAborted);
 
             return Ok(AjaxResult<UserViewModel>.Success(new UserViewModel(userInfo)));
+        }
+
+        [HttpPost("create")]
+        public async Task<ActionResult<AjaxResult<CreateUserResultViewModel>>> CreateAsync(CreateUserViewModel model)
+        {
+            var createdResult = await _userService.AddAsync(model.ToModel(), new Iniciator(), HttpContext.RequestAborted);
+
+            return Ok(AjaxResult<CreateUserResultViewModel>.Success(new CreateUserResultViewModel(createdResult)));
+        }
+
+        [HttpPut("update")]
+        public async Task<ActionResult<AjaxResult>> UpdateAsync(EditUserViewModel model)
+        {
+            await _userService.UpdateAsync(model.ToModel(), new Iniciator(), HttpContext.RequestAborted);
+
+            return Ok(AjaxResult.Success());
+        }
+
+        [HttpDelete("{userId}/delete")]
+        public async Task<ActionResult<AjaxResult>> DeleteAsync(string userId)
+        {
+            await _userService.DeleteAsync(userId, new Iniciator(), HttpContext.RequestAborted);
+
+            return Ok(AjaxResult.Success());
         }
     }
 }

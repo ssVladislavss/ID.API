@@ -17,6 +17,7 @@ using IdentityServer4.AccessTokenValidation;
 using IdentityServer4.AspNetIdentity;
 using IdentityServer4.EntityFramework.DbContexts;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Reflection;
@@ -83,6 +84,7 @@ builder.Services.AddIdentity<UserID, IdentityRole>(config =>
     config.Password.RequiredLength = 4;
     config.Password.RequireDigit = false;
     config.Password.RequireNonAlphanumeric = false;
+    config.Password.RequireLowercase = false;
     config.User.RequireUniqueEmail = true;
 
     config.ClaimsIdentity.UserNameClaimType = JwtClaimTypes.PreferredUserName;
@@ -125,10 +127,10 @@ builder.Services.AddIdentityServer(options =>
         options.EnableTokenCleanup = true;
         options.TokenCleanupInterval = 1800;
     })
-    .AddProfileService<IDProfileService>()
     .AddResourceOwnerValidator<ResourceOwnerPasswordValidator<UserID>>()
     .AddDeveloperSigningCredential()
-    .AddAspNetIdentity<UserID>();
+    .AddAspNetIdentity<UserID>()
+    .AddProfileService<IDProfileService>();
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();

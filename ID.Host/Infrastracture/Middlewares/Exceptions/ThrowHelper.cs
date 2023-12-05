@@ -2,6 +2,7 @@
 using ID.Core.ApiScopes.Exceptions;
 using ID.Core.Clients.Exceptions;
 using ID.Core.Exceptions.Base;
+using ID.Core.Users.Exceptions;
 
 namespace ID.Host.Infrastracture.Middlewares.Exceptions
 {
@@ -9,43 +10,32 @@ namespace ID.Host.Infrastracture.Middlewares.Exceptions
     {
         public static AjaxResult HandleIDException(BaseIDException iDException)
         {
-            switch (iDException)
+            return iDException switch
             {
-                case ClientAddException:
-                    return AjaxResult.Error("Не удалось создать приложение");
-                case ClientEditException:
-                    return AjaxResult.Error("Не удалось сохранить данные приложения");
-                case ClientRemoveException:
-                    return AjaxResult.Error("Не удалось удалить данные приложения");
-                case ClientNoContentException:
-                    return AjaxResult.Error("Не найдено ниодного приложения");
-                case ClientNotFoundException:
-                    return AjaxResult.Error("Приложение не найдено");
+                ClientAddException => AjaxResult.Error("Не удалось создать приложение"),
+                ClientEditException => AjaxResult.Error("Не удалось сохранить данные приложения"),
+                ClientRemoveException => AjaxResult.Error("Не удалось удалить данные приложения"),
+                ClientNoContentException => AjaxResult.Error("Не найдено ниодного приложения"),
+                ClientNotFoundException => AjaxResult.Error("Приложение не найдено"),
+                ApiScopeAddException => AjaxResult.Error("Не удалось создать область доступа"),
+                ApiScopeEditException => AjaxResult.Error("Не удалось сохранить данные области доступа"),
+                ApiScopeRemoveException => AjaxResult.Error("Не удалось удалить данные области доступа"),
+                ApiScopeNoContentException => AjaxResult.Error("Не найдено ниодной области доступа"),
+                ApiScopeNotFoundException => AjaxResult.Error("Область доступа не найдена"),
+                ApiResourceAddException => AjaxResult.Error("Не удалось создать ресурс"),
+                ApiResourceEditException => AjaxResult.Error("Не удалось сохранить данные ресурса"),
+                ApiResourceRemoveException => AjaxResult.Error("Не удалось удалить данные ресурса"),
+                ApiResourceNoContentException => AjaxResult.Error("Не найдено ниодного ресурса"),
+                ApiResourceNotFoundException => AjaxResult.Error("Ресурс не найден"),
 
-                case ApiScopeAddException:
-                    return AjaxResult.Error("Не удалось создать область доступа");
-                case ApiScopeEditException:
-                    return AjaxResult.Error("Не удалось сохранить данные области доступа");
-                case ApiScopeRemoveException:
-                    return AjaxResult.Error("Не удалось удалить данные области доступа");
-                case ApiScopeNoContentException:
-                    return AjaxResult.Error("Не найдено ниодной области доступа");
-                case ApiScopeNotFoundException:
-                    return AjaxResult.Error("Область доступа не найдена");
-
-                case ApiResourceAddException:
-                    return AjaxResult.Error("Не удалось создать ресурс");
-                case ApiResourceEditException:
-                    return AjaxResult.Error("Не удалось сохранить данные ресурса");
-                case ApiResourceRemoveException:
-                    return AjaxResult.Error("Не удалось удалить данные ресурса");
-                case ApiResourceNoContentException:
-                    return AjaxResult.Error("Не найдено ниодного ресурса");
-                case ApiResourceNotFoundException:
-                    return AjaxResult.Error("Ресурс не найден");
-                default:
-                    return AjaxResult.Error("Произошла неизвестная ошибка");
-            }
+                UserAddException => AjaxResult.Error("Не удалось зарегистрировать пользователя"),
+                UserEditException => AjaxResult.Error("Не удалось сохранить данные пользователя"),
+                UserDeleteException => AjaxResult.Error("Не удалось удалить данные пользователя"),
+                UserNoContentException => AjaxResult.Error("Не найдено ниодного пользователя"),
+                UserNotFoundException => AjaxResult.Error("Пользователь не найден"),
+                UserRoleNotFoundException => AjaxResult.Error("Не найдена роль пользователя"),
+                _ => AjaxResult.Error("Произошла неизвестная ошибка"),
+            };
         }
     }
 }
