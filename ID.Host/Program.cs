@@ -1,9 +1,16 @@
+using Builder.Messages.Html;
+using Builder.Messages.Html.Abstractions;
+using EmailSending;
+using EmailSending.Abstractions;
+using EmailSending.Configurations;
 using ID.Core.ApiResources;
 using ID.Core.ApiResources.Abstractions;
 using ID.Core.ApiScopes;
 using ID.Core.ApiScopes.Abstractions;
 using ID.Core.Clients;
 using ID.Core.Clients.Abstractions;
+using ID.Core.Roles;
+using ID.Core.Roles.Abstractions;
 using ID.Core.Users;
 using ID.Core.Users.Abstractions;
 using ID.Data.Configurations;
@@ -12,6 +19,7 @@ using ID.Data.EF;
 using ID.Data.EF.Repositories;
 using ID.Host.Infrastracture;
 using ID.Host.Infrastracture.Middlewares.Exceptions;
+using ID.Host.Infrastracture.Services.Users;
 using IdentityModel;
 using IdentityServer4.AccessTokenValidation;
 using IdentityServer4.AspNetIdentity;
@@ -20,7 +28,11 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using RazorEngine.Configuration;
+using RazorEngine.Templating;
+using RazorEngine.Text;
 using System.Reflection;
+using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -63,7 +75,22 @@ builder.Services.AddScoped<IApiScopeRepository, ApiScopeRepository>(opt => new A
                     prop => prop.Properties
                 }));
 builder.Services.AddScoped<IApiScopeService, ApiScopeService>();
-builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IUserService, IDUserService>();
+builder.Services.AddScoped<IRoleService, RoleService>();
+
+builder.Services.AddScoped<IEmailProvider, EmailProvider>();
+builder.Services.Configure<SmtpOptions>(options =>
+{
+    builder.Configuration.GetSection("smtpOptions").Bind(options);
+});
+
+TemplateServiceConfiguration configurationTemplate = new()
+{
+    EncodedStringFactory = new RawStringFactory(),
+    AllowMissingPropertiesOnDynamic = true
+};
+builder.Services.AddSingleton(RazorEngineService.Create(configurationTemplate));
+builder.Services.AddScoped<IHtmlBuilder, RazorHtmlBuilder>();
 
 builder.Services.AddDbContext<UserIDContext>(options =>
 {
@@ -144,7 +171,7 @@ builder.Services.AddAuthentication(IdentityServerAuthenticationDefaults.Authenti
                     options.SaveToken = true;
                     options.Audience = "localhost:44338";
                     options.RequireHttpsMetadata = false;
-                    options.ClaimsIssuer = "identity_server";
+                    options.ClaimsIssuer = "https://localhost:44338";
                     options.TokenValidationParameters = new TokenValidationParameters
                     {
                         ValidateAudience = false,

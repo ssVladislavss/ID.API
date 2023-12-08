@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using ID.Core.Users;
 using ID.Host.Infrastracture.Models.Users;
+using System.Security.Claims;
 
 namespace ID.Host.Infrastracture.Mapping.Profiles
 {
@@ -27,7 +28,29 @@ namespace ID.Host.Infrastracture.Mapping.Profiles
                     return new CreateUserData(createUser, data.RoleNames, data.Password);
                 });
 
-            CreateMap<EditUserViewModel, UserID>();
+            CreateMap<EditUserViewModel, EditUserData>()
+                .ForMember(dest => dest.User, x => x.Ignore())
+                .ForMember(dest => dest.Claims, x => x.Ignore())
+                .ConstructUsing((data, context) =>
+                {
+                    UserID updateUser = new()
+                    {
+                        LastName = data.LastName,
+                        FirstName = data.FirstName,
+                        SecondName = data.SecondName,
+                        Id = data.UserId
+                    };
+
+                    List<Claim> userClaims = new();
+                    List<string> roleNames = new();
+
+                    foreach (var claim in data.Claims)
+                        userClaims.Add(new Claim(claim.Type, claim.Value));
+
+                    roleNames.AddRange(data.RoleNames);
+
+                    return new EditUserData(updateUser, userClaims, roleNames);
+                });
         }
     }
 }

@@ -1,4 +1,5 @@
-﻿using ID.Core.Clients;
+﻿using ID.Core;
+using ID.Core.Clients;
 using ID.Core.Clients.Abstractions;
 using IdentityServer4.EntityFramework.DbContexts;
 using IdentityServer4.EntityFramework.Mappers;
@@ -58,7 +59,8 @@ namespace ID.Data.EF.Repositories
                     _context.Entry(clientScopes).State = EntityState.Deleted;
 
                 foreach (var clientClaim in nowEntity.Claims)
-                    _context.Entry(clientClaim).State = EntityState.Deleted;
+                    if(clientClaim.Type != IDConstants.Client.Claims.Types.ClientType)
+                        _context.Entry(clientClaim).State = EntityState.Deleted;
 
                 foreach (var clientSecret in nowEntity.ClientSecrets)
                     _context.Entry(clientSecret).State = EntityState.Deleted;

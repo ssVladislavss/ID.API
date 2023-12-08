@@ -1,6 +1,7 @@
 ﻿using IdentityServer4.Models;
 using IdentityServer4;
 using System.ComponentModel.DataAnnotations;
+using ID.Host.Infrastracture.Models.Claims;
 
 namespace ID.Host.Infrastracture.Models.Clients
 {
@@ -44,7 +45,7 @@ namespace ID.Host.Infrastracture.Models.Clients
         public bool EnableLocalLogin { get; set; } = true;
         public List<string> IdentityProviderRestrictions { get; set; } = new List<string>();
         public bool IncludeJwtId { get; set; } = true;
-        public List<ClientClaimViewModel> Claims { get; set; } = new List<ClientClaimViewModel>();
+        public List<ClaimViewModel> Claims { get; set; } = new List<ClaimViewModel>();
         public bool AlwaysSendClientClaims { get; set; } = false;
         public string? ClientClaimsPrefix { get; set; } = "client_";
         public string? PairWiseSubjectSalt { get; set; }

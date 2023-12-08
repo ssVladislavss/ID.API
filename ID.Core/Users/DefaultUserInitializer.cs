@@ -1,4 +1,5 @@
-﻿using ID.Core.Users.Default;
+﻿using ID.Core.Roles.Default;
+using ID.Core.Users.Default;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -14,7 +15,8 @@ namespace ID.Core.Users
             var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
 
             var user = DefaultUserID.RootAdmin;
-            var role = DefaultUserID.RootAdminRole;
+            var role = DefaultRole.RootAdminRole;
+            var rootAdminRoleClaims = DefaultRole.RootAdminClaims;
 
             var nowUser = await userManager.FindByIdAsync(user.Id);
             if (nowUser == null)
@@ -24,9 +26,23 @@ namespace ID.Core.Users
 
             var nowRole = await roleManager.FindByIdAsync(role.Id);
             if (nowRole == null)
+            {
                 await roleManager.CreateAsync(role);
+
+                foreach (var rootRoleClaim in rootAdminRoleClaims)
+                    await roleManager.AddClaimAsync(role, rootRoleClaim);
+            }
             else
+            {
                 role = nowRole;
+
+                var existsRootRoleClaims = await roleManager.GetClaimsAsync(role);
+                foreach(var rootClaim in existsRootRoleClaims)
+                    await roleManager.RemoveClaimAsync(role, rootClaim);
+
+                foreach (var rootRoleClaim in rootAdminRoleClaims)
+                    await roleManager.AddClaimAsync(role, rootRoleClaim);
+            }
 
             if (!await userManager.IsInRoleAsync(user, role.Name))
                 await userManager.AddToRoleAsync(user, role.Name);

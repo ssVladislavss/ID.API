@@ -14,8 +14,8 @@ namespace ID.Core.Clients.Default
                 ClientName = "Service ID API",
                 Enabled = true,
                 Claims = {
-                    new(IDConstants.Client.Claims.ClientType, "base"),
-                    new(IDConstants.Client.Claims.ClientName, "Service ID API")
+                    new(IDConstants.Client.Claims.Types.ClientType, IDConstants.Client.Claims.Values.Base),
+                    new(IDConstants.Client.Claims.Types.ClientName, "Service ID API")
                 },
 
                 ClientId = "9C014C46-7A09-49A5-8264-99CD83495D28",
@@ -45,8 +45,8 @@ namespace ID.Core.Clients.Default
                 ClientName = "Service ID UI",
                 Enabled = true,
                 Claims = {
-                    new(IDConstants.Client.Claims.ClientType, "base"),
-                    new(IDConstants.Client.Claims.ClientName, "Service ID UI")
+                    new(IDConstants.Client.Claims.Types.ClientType, IDConstants.Client.Claims.Values.Base),
+                    new(IDConstants.Client.Claims.Types.ClientName, "Service ID UI")
                 },
 
                 ClientId = "32c2c3a8-b8ed-4cbd-8e36-c8312fab0cc2",

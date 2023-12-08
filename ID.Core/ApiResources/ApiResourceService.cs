@@ -13,7 +13,7 @@ namespace ID.Core.ApiResources
             _apiResourceRepository = apiResourceRepository ?? throw new ArgumentNullException(nameof(apiResourceRepository));
         }
 
-        public async Task<IDApiResource> AddAsync(IDApiResource resource, Iniciator iniciator, CancellationToken token = default)
+        public virtual async Task<IDApiResource> AddAsync(IDApiResource resource, Iniciator iniciator, CancellationToken token = default)
         {
             var model = await _apiResourceRepository.FindByNameAsync(resource.Name, token);
 
@@ -24,8 +24,7 @@ namespace ID.Core.ApiResources
 
             return resource;
         }
-
-        public async Task EditAsync(IDApiResource resource, Iniciator iniciator, CancellationToken token = default)
+        public virtual async Task EditAsync(IDApiResource resource, Iniciator iniciator, CancellationToken token = default)
         {
             var model = await _apiResourceRepository.FindAsync(resource.Id, token)
                 ?? throw new ApiResourceEditException($"EditAsync: api resource (ResourceId - {resource.Id}) was not found");
@@ -34,8 +33,7 @@ namespace ID.Core.ApiResources
 
             await _apiResourceRepository.EditAsync(model, token);
         }
-
-        public async Task EditStateAsync(int resourceId, bool status, Iniciator iniciator, CancellationToken token = default)
+        public virtual async Task EditStateAsync(int resourceId, bool status, Iniciator iniciator, CancellationToken token = default)
         {
             var model = await _apiResourceRepository.FindAsync(resourceId, token)
                 ?? throw new ApiResourceEditException($"EditStateAsync: api resource (ResourceId - {resourceId}) was not found");
@@ -47,22 +45,19 @@ namespace ID.Core.ApiResources
                 await _apiResourceRepository.EditAsync(model, token);
             }
         }
-
-        public async Task<IDApiResource> FindAsync(int resourceId, Iniciator iniciator, CancellationToken token = default)
+        public virtual async Task<IDApiResource> FindAsync(int resourceId, Iniciator iniciator, CancellationToken token = default)
         {
             var resource = await _apiResourceRepository.FindAsync(resourceId, token);
 
             return resource ?? throw new ApiResourceNotFoundException($"FindAsync: api resource (ResourceId - {resourceId}) was not found");
         }
-
-        public async Task<IDApiResource> FindByNameAsync(string name, Iniciator iniciator, CancellationToken token = default)
+        public virtual async Task<IDApiResource> FindByNameAsync(string name, Iniciator iniciator, CancellationToken token = default)
         {
             var resource = await _apiResourceRepository.FindByNameAsync(name, token);
 
             return resource ?? throw new ApiResourceNotFoundException($"FindByNameAsync: api resource (ResourceName - {name}) was not found");
         }
-
-        public async Task<IEnumerable<IDApiResource>> GetAsync(Iniciator iniciator, CancellationToken token = default)
+        public virtual async Task<IEnumerable<IDApiResource>> GetAsync(Iniciator iniciator, CancellationToken token = default)
         {
             var resources = await _apiResourceRepository.GetAsync(token);
 
@@ -71,8 +66,7 @@ namespace ID.Core.ApiResources
 
             return resources;
         }
-
-        public async Task<IEnumerable<IDApiResource>> GetAsync(ApiResourceSearchFilter filter, Iniciator iniciator, CancellationToken token = default)
+        public virtual async Task<IEnumerable<IDApiResource>> GetAsync(ApiResourceSearchFilter filter, Iniciator iniciator, CancellationToken token = default)
         {
             var resources = await _apiResourceRepository.GetAsync(filter, token);
 
@@ -81,8 +75,7 @@ namespace ID.Core.ApiResources
 
             return resources;
         }
-
-        public async Task RemoveAsync(int id, Iniciator iniciator, CancellationToken token = default)
+        public virtual async Task RemoveAsync(int id, Iniciator iniciator, CancellationToken token = default)
         {
             var apiResource = await _apiResourceRepository.FindAsync(id, token)
                 ?? throw new ApiResourceRemoveException($"RemoveAsync: api resource (ResourceId - {id}) was not found");

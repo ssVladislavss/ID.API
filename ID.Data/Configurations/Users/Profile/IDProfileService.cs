@@ -11,47 +11,70 @@ namespace ID.Data.Configurations.Users.Profile
 {
     public class IDProfileService : ProfileService<UserID>
     {
+        protected readonly RoleManager<IdentityRole> RoleManager;
         public IDProfileService
             (UserManager<UserID> userManager,
-             IUserClaimsPrincipalFactory<UserID> claimsFactory)
+             IUserClaimsPrincipalFactory<UserID> claimsFactory,
+             RoleManager<IdentityRole> roleManager)
              : base(userManager, claimsFactory)
         {
+            RoleManager = roleManager;
         }
 
         public IDProfileService
             (UserManager<UserID> userManager,
              IUserClaimsPrincipalFactory<UserID> claimsFactory,
-             ILogger<ProfileService<UserID>> logger)
+             ILogger<ProfileService<UserID>> logger,
+             RoleManager<IdentityRole> roleManager)
              : base(userManager, claimsFactory, logger)
         {
+            RoleManager = roleManager;
         }
 
-        protected override Task GetProfileDataAsync(ProfileDataRequestContext context, UserID user)
+        protected override async Task GetProfileDataAsync(ProfileDataRequestContext context, UserID user)
         {
+            var responseClaims = await GetIDUserClaimsAsync(user);
+
             var requestedClaims = context.RequestedClaimTypes.ToList();
 
-            requestedClaims.AddRange(new[]
-            {
-                JwtClaimTypes.FamilyName,
-                JwtClaimTypes.GivenName,
-                JwtClaimTypes.MiddleName,
-                JwtClaimTypes.BirthDate,
-                "allowed_functional",
-                JwtClaimTypes.PhoneNumber,
-                JwtClaimTypes.EmailVerified,
-                JwtClaimTypes.PhoneNumberVerified
-            });
+            requestedClaims.AddRange(responseClaims.Claims.Select(x => x.Type));
 
             context.RequestedClaimTypes = requestedClaims;
 
-            return base.GetProfileDataAsync(context, user);
+            await base.GetProfileDataAsync(context, user);
         }
 
         protected override async Task<ClaimsPrincipal> GetUserClaimsAsync(UserID user)
         {
-            var userRoleNames = await UserManager.GetRolesAsync(user);
+            return await GetIDUserClaimsAsync(user);
+        }
 
-            var claims = new List<Claim>();
+        protected async Task<ClaimsPrincipal> GetIDUserClaimsAsync(UserID user)
+        {
+            var currentPrincipal = await base.GetUserClaimsAsync(user);
+
+            var userRoleNames = await UserManager.GetRolesAsync(user);
+            var userClaimsSpecified = await UserManager.GetClaimsAsync(user);
+
+            var userRoleClaims = new Dictionary<string, Claim>();
+            var userSpecifiedClaims = new Dictionary<string, Claim>();
+
+            //foreach (var roleName in userRoleNames)
+            //{
+            //    var role = await RoleManager.FindByNameAsync(roleName);
+            //    if(role != null)
+            //    {
+            //        var roleClaims = await RoleManager.GetClaimsAsync(role);
+
+            //        foreach (var item in roleClaims)
+            //            userRoleClaims.Add($"role_{role.Name}_{item.Type}", item);
+            //    }
+            //}
+
+            //foreach (var claim in userClaimsSpecified)
+            //    userSpecifiedClaims.Add($"user_{claim.Type}", claim);
+
+            var claims = new List<Claim>(currentPrincipal.Claims);
 
             if (!string.IsNullOrEmpty(user.LastName))
                 claims.Add(new Claim(JwtClaimTypes.FamilyName, user.LastName));
@@ -59,7 +82,7 @@ namespace ID.Data.Configurations.Users.Profile
                 claims.Add(new Claim(JwtClaimTypes.GivenName, user.FirstName));
             if (!string.IsNullOrEmpty(user.SecondName))
                 claims.Add(new Claim(JwtClaimTypes.MiddleName, user.SecondName));
-            if(user.BirthDate.HasValue)
+            if (user.BirthDate.HasValue)
                 claims.Add(new Claim(JwtClaimTypes.BirthDate, user.BirthDate.Value.ToString("d")));
             if (user.AvailableFunctionality?.Count > 0)
                 claims.Add(new Claim("allowed_functional", JsonConvert.SerializeObject(user.AvailableFunctionality)));
@@ -69,8 +92,15 @@ namespace ID.Data.Configurations.Users.Profile
                 claims.Add(new Claim(JwtClaimTypes.PhoneNumber, user.PhoneNumber));
 
             claims.AddRange(userRoleNames.Select(x => new Claim(JwtClaimTypes.Role, x)));
-            claims.Add(new Claim(JwtClaimTypes.EmailVerified, user.EmailConfirmed.ToString()));
-            claims.Add(new Claim(JwtClaimTypes.PhoneNumberVerified, user.PhoneNumberConfirmed.ToString()));
+
+            //if (userRoleClaims.Count > 0)
+            //    foreach (var roleClaim in userRoleClaims)
+            //        claims.Add(new Claim(roleClaim.Key, roleClaim.Value.Value));
+            //if (userSpecifiedClaims.Count > 0)
+            //    foreach (var specifiedClaim in userSpecifiedClaims)
+            //        claims.Add(new Claim(specifiedClaim.Key, specifiedClaim.Value.Value));
+
+            claims = claims.Distinct().ToList();
 
             var identity = new ClaimsIdentity(claims);
 

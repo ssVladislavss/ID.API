@@ -18,9 +18,9 @@ namespace ID.Host.Infrastracture.Mapping
             return Mapper.Map<CreateUserData>(source);
         }
 
-        public static UserID ToModel(this EditUserViewModel source)
+        public static EditUserData ToModel(this EditUserViewModel source)
         {
-            return Mapper.Map<UserID>(source);
+            return Mapper.Map<EditUserData>(source);
         }
     }
 }

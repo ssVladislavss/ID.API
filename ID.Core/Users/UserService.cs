@@ -1,9 +1,9 @@
 ﻿using ID.Core.Users.Abstractions;
+using ID.Core.Users.Default;
 using ID.Core.Users.Exceptions;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
-using static IdentityServer4.Models.IdentityResources;
 
 namespace ID.Core.Users
 {
@@ -23,18 +23,18 @@ namespace ID.Core.Users
             _identityOptions = identityDescriptor?.Value ?? new IdentityOptions();
         }
 
-        public async Task<CreateUserResult> AddAsync(CreateUserData data, Iniciator iniciator, CancellationToken token = default)
+        public virtual async Task<CreateUserResult> AddAsync(CreateUserData data, Iniciator iniciator, CancellationToken token = default)
         {
             var nowUser = await _userManager.FindByEmailAsync(data.User.Email);
             if (nowUser != null)
-                throw new UserAddException($"AddAsync: user (Email - {data.User.Email}) was found");
+                throw new UserAddExistException($"AddAsync: user (Email - {data.User.Email}) was found");
 
             List<IdentityRole> roles = new List<IdentityRole>();
 
             foreach (var roleName in data.RoleNames)
             {
                 var role = await _roleManager.FindByNameAsync(roleName)
-                      ?? throw new UserAddException($"AddAsync: role (RoleName - {roleName}) was not found");
+                      ?? throw new UserRoleNotFoundException($"AddAsync: role (RoleName - {roleName}) was not found");
 
                 roles.Add(role);
             }
@@ -60,19 +60,20 @@ namespace ID.Core.Users
 
             return new CreateUserResult(data.User, roles, data.Password);
         }
-
-        public async Task DeleteAsync(string userId, Iniciator iniciator, CancellationToken token = default)
+        public virtual async Task DeleteAsync(string userId, Iniciator iniciator, CancellationToken token = default)
         {
             var user = await _userManager.FindByIdAsync(userId)
                 ?? throw new UserDeleteException($"DeleteAsync: user (UserId - {userId}) was not found");
+
+            if (user.Id == DefaultUserID.RootAdmin.Id)
+                throw new UserRemoveAccessException($"DeleteAsync: user (UserId - {user.Id}) cannot be deleted");
 
             var deleteResult = await _userManager.DeleteAsync(user);
             if (!deleteResult.Succeeded)
                 throw new UserDeleteException($"DeleteAsync: user (UserId - {userId}) error deleting. " +
                     $"{string.Join(',', deleteResult.Errors.Select(x => $"{x.Code} - {x.Description}"))}");
         }
-
-        public async Task<UserInfo> FindByEmailAsync(string email, Iniciator iniciator, CancellationToken token = default)
+        public virtual async Task<UserInfo> FindByEmailAsync(string email, Iniciator iniciator, CancellationToken token = default)
         {
             var user = await _userManager.FindByEmailAsync(email)
                 ?? throw new UserNotFoundException($"FindByEmailAsync: user (Email - {email}) was not found");
@@ -90,10 +91,11 @@ namespace ID.Core.Users
                 }
             }
 
-            return new UserInfo(user, userRoles);
-        }
+            var currentUserClaims = await _userManager.GetClaimsAsync(user);
 
-        public async Task<UserInfo> FindByIdAsync(string userId, Iniciator iniciator, CancellationToken token = default)
+            return new UserInfo(user, userRoles, currentUserClaims);
+        }
+        public virtual async Task<UserInfo> FindByIdAsync(string userId, Iniciator iniciator, CancellationToken token = default)
         {
             var user = await _userManager.FindByIdAsync(userId)
                 ?? throw new UserNotFoundException($"FindByEmailAsync: user (UserId - {userId}) was not found");
@@ -111,10 +113,11 @@ namespace ID.Core.Users
                 }
             }
 
-            return new UserInfo(user, userRoles);
-        }
+            var currentUserClaims = await _userManager.GetClaimsAsync(user);
 
-        public async Task<UserInfo> FindByNameAsync(string userName, Iniciator iniciator, CancellationToken token = default)
+            return new UserInfo(user, userRoles, currentUserClaims);
+        }
+        public virtual async Task<UserInfo> FindByNameAsync(string userName, Iniciator iniciator, CancellationToken token = default)
         {
             var user = await _userManager.FindByNameAsync(userName)
                 ?? throw new UserNotFoundException($"FindByEmailAsync: user (UserName - {userName}) was not found");
@@ -132,10 +135,11 @@ namespace ID.Core.Users
                 }
             }
 
-            return new UserInfo(user, userRoles);
-        }
+            var currentUserClaims = await _userManager.GetClaimsAsync(user);
 
-        public async Task<IEnumerable<UserInfo>> GetAsync(Iniciator iniciator, CancellationToken token = default)
+            return new UserInfo(user, userRoles, currentUserClaims);
+        }
+        public virtual async Task<IEnumerable<UserInfo>> GetAsync(Iniciator iniciator, CancellationToken token = default)
         {
             var usersInfo = new List<UserInfo>();
 
@@ -161,30 +165,20 @@ namespace ID.Core.Users
                     }
                 }
 
-                usersInfo.Add(new UserInfo(user, userRoles));
+                var currentUserClaims = await _userManager.GetClaimsAsync(user);
+
+                usersInfo.Add(new UserInfo(user, userRoles, currentUserClaims));
             }
 
             return usersInfo;
         }
-
-        public async Task<IEnumerable<UserInfo>> GetAsync(UserSearchFilter filter, Iniciator iniciator, CancellationToken token = default)
+        public virtual async Task<IEnumerable<UserInfo>> GetAsync(UserSearchFilter filter, Iniciator iniciator, CancellationToken token = default)
         {
             var usersInfo = new List<UserInfo>();
 
             var query = _userManager.Users;
 
-            if (filter.BirthDate.HasValue)
-                query = query.Where(x => x.BirthDate!.Value.Date == filter.BirthDate.Value.Date);
-            if (!string.IsNullOrEmpty(filter.Phone))
-                query = query.Where(x => x.PhoneNumber == filter.Phone);
-            if (!string.IsNullOrEmpty(filter.Email))
-                query = query.Where(x => x.Email == filter.Email);
-            if (!string.IsNullOrEmpty(filter.FirstName))
-                query = query.Where(x => x.FirstName == filter.FirstName);
-            if (!string.IsNullOrEmpty(filter.LastName))
-                query = query.Where(x => x.LastName == filter.LastName);
-            if (!string.IsNullOrEmpty(filter.SecondName))
-                query = query.Where(x => x.SecondName == filter.SecondName);
+            filter.Apply(ref query);
 
             var users = await query.ToListAsync(token);
             
@@ -219,28 +213,49 @@ namespace ID.Core.Users
                     }
                 }
 
-                usersInfo.Add(new UserInfo(user, userRoles));
+                var currentUserClaims = await _userManager.GetClaimsAsync(user);
+
+                usersInfo.Add(new UserInfo(user, userRoles, currentUserClaims));
             }
 
             return usersInfo;
         }
-
-        public async Task UpdateAsync(UserID user, Iniciator iniciator, CancellationToken token = default)
+        public virtual async Task UpdateAsync(EditUserData data, Iniciator iniciator, CancellationToken token = default)
         {
-            var currentUser = await _userManager.FindByIdAsync(user.Id)
-                ?? await _userManager.FindByEmailAsync(user.Email)
-                ?? throw new UserEditException($"UpdateAsync: user (Id - {user.Id}, Email - {user.Email}) was not found");
+            var currentUser = await _userManager.FindByIdAsync(data.User.Id)
+                ?? await _userManager.FindByEmailAsync(data.User.Email)
+                ?? throw new UserEditException($"UpdateAsync: user (Id - {data.User.Id}, Email - {data.User.Email}) was not found");
 
-            currentUser.LastName = user.LastName;
-            currentUser.FirstName = user.FirstName;
-            currentUser.SecondName = user.SecondName;
-            currentUser.BirthDate = user.BirthDate;
-            currentUser.AvailableFunctionality = user.AvailableFunctionality;
+            if (currentUser.Id == DefaultUserID.RootAdmin.Id)
+                throw new UserEditAccessExeption($"UpdateAsync: user (UserId - {currentUser.Id}) data cannot be changed");
+
+            currentUser.LastName = data.User.LastName;
+            currentUser.FirstName = data.User.FirstName;
+            currentUser.SecondName = data.User.SecondName;
+            currentUser.BirthDate = data.User.BirthDate;
+            currentUser.AvailableFunctionality = data.User.AvailableFunctionality;
 
             var updateResult = await _userManager.UpdateAsync(currentUser);
             if (!updateResult.Succeeded)
-                throw new UserEditException($"UpdateAsync: user (Id - {user.Id}, Email - {user.Email}) error updating. " +
+                throw new UserEditException($"UpdateAsync: user (Id - {data.User.Id}, Email - {data.User.Email}) error updating. " +
                     $"{string.Join(',', updateResult.Errors.Select(x => $"{x.Code} - {x.Description}"))}");
+
+            var currentUserClaims = await _userManager.GetClaimsAsync(currentUser);
+
+            if(currentUserClaims.Count > 0)
+                await _userManager.RemoveClaimsAsync(currentUser, currentUserClaims);
+
+            await _userManager.AddClaimsAsync(currentUser, data.Claims);
+
+            foreach (var roleName in data.RoleNames)
+            {
+                var role = await _roleManager.FindByNameAsync(roleName)
+                    ?? throw new UserRoleNotFoundException($"UpdateAsync: role (RoleName - {roleName}) was not found");
+            }
+
+            var currentUserRoles = await _userManager.GetRolesAsync(currentUser);
+            await _userManager.RemoveFromRolesAsync(currentUser, currentUserRoles);
+            await _userManager.AddToRolesAsync(currentUser, data.RoleNames);
         }
     }
 }

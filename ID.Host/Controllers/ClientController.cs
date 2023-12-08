@@ -2,6 +2,7 @@
 using ID.Core.Clients;
 using ID.Core.Clients.Abstractions;
 using ID.Host.Infrastracture;
+using ID.Host.Infrastracture.Extensions;
 using ID.Host.Infrastracture.Mapping;
 using ID.Host.Infrastracture.Models.Clients;
 using IdentityServer4.AccessTokenValidation;
@@ -40,7 +41,7 @@ namespace ID.Host.Controllers
                     clientFilter = clientFilter.WithStatus(filter.Status.Value);
             }
 
-            var clients = await _clientService.GetAsync(clientFilter, new Iniciator(), HttpContext.RequestAborted);
+            var clients = await _clientService.GetAsync(clientFilter, HttpContext.User.ToIniciator(), HttpContext.RequestAborted);
 
             return Ok(AjaxResult<IEnumerable<Client>>.Success(clients));
         }
@@ -48,7 +49,7 @@ namespace ID.Host.Controllers
         [HttpGet("{clientId}")]
         public async Task<ActionResult<AjaxResult<Client>>> FindAsync(string clientId)
         {
-            var client = await _clientService.FindAsync(clientId, new Iniciator(), HttpContext.RequestAborted);
+            var client = await _clientService.FindAsync(clientId, HttpContext.User.ToIniciator(), HttpContext.RequestAborted);
 
             return Ok(AjaxResult<Client>.Success(client));
         }
@@ -56,7 +57,7 @@ namespace ID.Host.Controllers
         [HttpPost("create")]
         public async Task<ActionResult<AjaxResult<Client>>> CreateAsync(CreateClientViewModel model)
         {
-            var addedClient = await _clientService.AddAsync(model.ToModel(), new Iniciator(), HttpContext.RequestAborted);
+            var addedClient = await _clientService.AddAsync(model.ToModel(), HttpContext.User.ToIniciator(), HttpContext.RequestAborted);
 
             return Ok(AjaxResult<Client>.Success(addedClient));
         }
@@ -64,7 +65,7 @@ namespace ID.Host.Controllers
         [HttpPut("edit")]
         public async Task<ActionResult<AjaxResult>> EditAsync(EditClientViewModel model)
         {
-            await _clientService.EditAsync(model.ToModel(), new Iniciator(), HttpContext.RequestAborted);
+            await _clientService.EditAsync(model.ToModel(), HttpContext.User.ToIniciator(), HttpContext.RequestAborted);
 
             return Ok(AjaxResult.Success());
         }
@@ -72,7 +73,7 @@ namespace ID.Host.Controllers
         [HttpPut("edit/status")]
         public async Task<ActionResult> EditStatusAsync(EditClientStatusViewModel model)
         {
-            await _clientService.EditStatusAsync(model.ClientId, model.Status, new Iniciator(), HttpContext.RequestAborted);
+            await _clientService.EditStatusAsync(model.ClientId, model.Status, HttpContext.User.ToIniciator(), HttpContext.RequestAborted);
 
             return Ok(AjaxResult.Success());
         }
@@ -80,7 +81,7 @@ namespace ID.Host.Controllers
         [HttpDelete("{clientId}/remove")]
         public async Task<ActionResult<AjaxResult>> RemoveAsync(string clientId)
         {
-            await _clientService.RemoveAsync(clientId, new Iniciator(), HttpContext.RequestAborted);
+            await _clientService.RemoveAsync(clientId, HttpContext.User.ToIniciator(), HttpContext.RequestAborted);
 
             return Ok(AjaxResult.Success());
         }

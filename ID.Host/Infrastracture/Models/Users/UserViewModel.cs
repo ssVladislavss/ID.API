@@ -1,4 +1,6 @@
 ﻿using ID.Core.Users;
+using ID.Host.Infrastracture.Models.Claims;
+using ID.Host.Infrastracture.Models.Roles;
 
 namespace ID.Host.Infrastracture.Models.Users
 {
@@ -14,7 +16,8 @@ namespace ID.Host.Infrastracture.Models.Users
         public string? FirstName { get; set; }
         public string? SecondName { get; set; }
         public DateTime? BirthDate { get; set; }
-        public IEnumerable<UserRoleViewModel> Roles { get; set; }
+        public IEnumerable<RoleViewModel> Roles { get; set; }
+        public IEnumerable<ClaimViewModel> Claims { get; set; }
 
         public UserViewModel(UserID user)
         {
@@ -28,7 +31,8 @@ namespace ID.Host.Infrastracture.Models.Users
             FirstName = user.FirstName;
             SecondName = user.SecondName;
             BirthDate = user.BirthDate;
-            Roles = Enumerable.Empty<UserRoleViewModel>();
+            Roles = Enumerable.Empty<RoleViewModel>();
+            Claims = Enumerable.Empty<ClaimViewModel>();
         }
 
         public UserViewModel(UserInfo userInfo)
@@ -43,7 +47,8 @@ namespace ID.Host.Infrastracture.Models.Users
             FirstName = userInfo.User.FirstName;
             SecondName = userInfo.User.SecondName;
             BirthDate = userInfo.User.BirthDate;
-            Roles = userInfo.Roles.Select(x => new UserRoleViewModel(x));
+            Roles = userInfo.Roles.Select(x => new RoleViewModel(x));
+            Claims = userInfo.Claims.Select(x => new ClaimViewModel() { Type = x.Type, Value = x.Value });
         }
 
         public UserViewModel(CreateUserResult createResult)
@@ -58,7 +63,8 @@ namespace ID.Host.Infrastracture.Models.Users
             FirstName = createResult.CreatedUser.FirstName;
             SecondName = createResult.CreatedUser.SecondName;
             BirthDate = createResult.CreatedUser.BirthDate;
-            Roles = createResult.UserRoles.Select(x => new UserRoleViewModel(x));
+            Roles = createResult.UserRoles.Select(x => new RoleViewModel(x));
+            Claims = Enumerable.Empty<ClaimViewModel>();
         }
     }
 }

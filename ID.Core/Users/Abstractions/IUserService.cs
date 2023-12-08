@@ -8,7 +8,7 @@
         Task<UserInfo> FindByNameAsync(string userName, Iniciator iniciator, CancellationToken token = default);
         Task<UserInfo> FindByEmailAsync(string email, Iniciator iniciator, CancellationToken token = default);
         Task<CreateUserResult> AddAsync(CreateUserData data, Iniciator iniciator, CancellationToken token = default);
-        Task UpdateAsync(UserID user, Iniciator iniciator, CancellationToken token = default);
+        Task UpdateAsync(EditUserData data, Iniciator iniciator, CancellationToken token = default);
         Task DeleteAsync(string userId, Iniciator iniciator, CancellationToken token = default);
     }
 }

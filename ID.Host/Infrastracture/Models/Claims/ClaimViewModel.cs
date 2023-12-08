@@ -1,8 +1,8 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace ID.Host.Infrastracture.Models.Clients
+namespace ID.Host.Infrastracture.Models.Claims
 {
-    public class ClientClaimViewModel
+    public class ClaimViewModel
     {
         [Required(ErrorMessage = "Поле - Type - обязательно к заполнению")]
         public string Type { get; set; } = string.Empty;

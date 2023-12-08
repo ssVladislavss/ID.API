@@ -69,6 +69,22 @@ namespace ID.Core.Users
             return this;
         }
 
+        internal void Apply(ref IQueryable<UserID> query)
+        {
+            if (BirthDate.HasValue)
+                query = query.Where(x => x.BirthDate!.Value.Date == BirthDate.Value.Date);
+            if (!string.IsNullOrEmpty(Phone))
+                query = query.Where(x => x.PhoneNumber == Phone);
+            if (!string.IsNullOrEmpty(Email))
+                query = query.Where(x => x.Email == Email);
+            if (!string.IsNullOrEmpty(FirstName))
+                query = query.Where(x => x.FirstName == FirstName);
+            if (!string.IsNullOrEmpty(LastName))
+                query = query.Where(x => x.LastName == LastName);
+            if (!string.IsNullOrEmpty(SecondName))
+                query = query.Where(x => x.SecondName == SecondName);
+        }
+
         public override string ToString()
             => JsonConvert.SerializeObject(this, new JsonSerializerSettings { DefaultValueHandling = DefaultValueHandling.Ignore });
     }
