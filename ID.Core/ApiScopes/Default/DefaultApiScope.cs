@@ -8,7 +8,7 @@ namespace ID.Core.ApiScopes.Default
         public static ApiScope[] Scopes
             => new[] { ServiceID, ServiceIDUI };
         public static ApiScope ServiceID
-            => new("service_id_api", "Service_ID_API",
+            => new(IDConstants.ApiScopes.Default.Names.ServiceIDApiName, "Service_ID_API",
                     new[]
                     {
                         JwtClaimTypes.Name,
@@ -18,7 +18,7 @@ namespace ID.Core.ApiScopes.Default
                         JwtClaimTypes.PreferredUserName
                     });
         public static ApiScope ServiceIDUI
-            => new("service_id_ui", "Service_ID_UI",
+            => new(IDConstants.ApiScopes.Default.Names.ServiceIDUIName, "Service_ID_UI",
                     new[]
                     {
                         JwtClaimTypes.Name,

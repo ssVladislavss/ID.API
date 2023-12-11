@@ -39,11 +39,10 @@
                     <tbody>
                         <tr>
                             <td colspan="3" style="padding: 10px 40px 10px 40px; font-family: 'Open Sans', 'Segoe UI', 'Arial', sans-serif; color: #444444;">
-                                <h3 style="margin-bottom: 10px; font-size: 16px;">Регистрация @Model.Client.ClientName </h3>
-                                <p style="margin-bottom: 10px; font-size: 14px; color: #444444;">Вы зарегистрировались. <br />Ваш пароль: <b>@Model.Password</b></p>
-                                <p style="margin-bottom: 10px; font-size: 14px; color: #444444;">Настоятельно рекомендуем сменить пароль!</p>
-                                <p style="margin-bottom: 10px; font-size: 14px; color: #444444;">Для завершения регистрации необходимо подтвердить аккаунт.</p>
-                                <a style="margin-bottom: 10px; font-size: 14px;" href="@Model.ConfirmLink">Подтвердить</a>
+                                <h3 style="margin-bottom: 10px; font-size: 16px;">Здравствуйте!</h3>
+                                <h6 style="margin-bottom: 10px; font-size: 16px;">Вы зарегистрировались в @Model.Client.ClientName </h6>
+                                <p style="margin-bottom: 10px; font-size: 14px; color: #444444;">Необходимо подтвердить аккаунт.</p>
+                                <p style="margin-bottom: 10px; font-size: 14px; color: #444444;"><button href="@Model.ConfirmLink">Подтвердить</button></p>
                             </td>
                         </tr>
                     </tbody>

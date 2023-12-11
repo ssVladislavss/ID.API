@@ -7,14 +7,15 @@ using ID.Host.Infrastracture.Models.ApiResources;
 using ID.Host.Infrastracture.Mapping;
 using IdentityServer4.AccessTokenValidation;
 using Microsoft.AspNetCore.Authorization;
-using ID.Host.Infrastracture.Extensions;
+using ID.Core;
+using ISDS.ServiceExtender.Http;
 
 namespace ID.Host.Controllers
 {
     [Route("api/apiresource")]
     [ApiController]
-    [Authorize(AuthenticationSchemes = IdentityServerAuthenticationDefaults.AuthenticationScheme)]
-    public class ApiResourceController : ControllerBase
+    [Authorize(AuthenticationSchemes = IdentityServerAuthenticationDefaults.AuthenticationScheme, Roles = IDConstants.Roles.RootAdmin)]
+    public class ApiResourceController : BaseController<RequestIniciator>
     {
         private readonly IApiResourceService _apiResourceService;
 
@@ -35,7 +36,7 @@ namespace ID.Host.Controllers
                     scopesFilter = scopesFilter.WithName(filter.Name);
             }
 
-            var apiResources = await _apiResourceService.GetAsync(scopesFilter, HttpContext.User.ToIniciator(), HttpContext.RequestAborted);
+            var apiResources = await _apiResourceService.GetAsync(scopesFilter, SrvUser, HttpContext.RequestAborted);
 
             return Ok(AjaxResult<IEnumerable<IDApiResource>>.Success(apiResources));
         }
@@ -43,7 +44,7 @@ namespace ID.Host.Controllers
         [HttpGet("{resourceId:int}")]
         public async Task<ActionResult<AjaxResult<IDApiResource>>> FindAsync(int resourceId)
         {
-            var apiResource = await _apiResourceService.FindAsync(resourceId, HttpContext.User.ToIniciator(), HttpContext.RequestAborted);
+            var apiResource = await _apiResourceService.FindAsync(resourceId, SrvUser, HttpContext.RequestAborted);
 
             return Ok(AjaxResult<IDApiResource>.Success(apiResource));
         }
@@ -51,7 +52,7 @@ namespace ID.Host.Controllers
         [HttpPost("create")]
         public async Task<ActionResult<AjaxResult<IDApiResource>>> CreateAsync(CreateApiResourceViewModel model)
         {
-            var addedResource = await _apiResourceService.AddAsync(model.ToModel(), HttpContext.User.ToIniciator(), HttpContext.RequestAborted);
+            var addedResource = await _apiResourceService.AddAsync(model.ToModel(), SrvUser, HttpContext.RequestAborted);
 
             return Ok(AjaxResult<IDApiResource>.Success(addedResource));
         }
@@ -59,7 +60,7 @@ namespace ID.Host.Controllers
         [HttpPut("edit")]
         public async Task<ActionResult<AjaxResult>> EditAsync(EditApiResourceViewModel model)
         {
-            await _apiResourceService.EditAsync(model.ToModel(), new Core.Iniciator(), HttpContext.RequestAborted);
+            await _apiResourceService.EditAsync(model.ToModel(), SrvUser, HttpContext.RequestAborted);
 
             return Ok(AjaxResult.Success());
         }
@@ -67,7 +68,7 @@ namespace ID.Host.Controllers
         [HttpPut("edit/status")]
         public async Task<ActionResult<AjaxResult>> EditStatusAsync(EditApiScopeStatusViewModel model)
         {
-            await _apiResourceService.EditStateAsync(model.Id, model.Status, HttpContext.User.ToIniciator(), HttpContext.RequestAborted);
+            await _apiResourceService.EditStateAsync(model.Id, model.Status, SrvUser, HttpContext.RequestAborted);
 
             return Ok(AjaxResult.Success());
         }
@@ -75,7 +76,7 @@ namespace ID.Host.Controllers
         [HttpDelete("{resourceId:int}/remove")]
         public async Task<ActionResult<AjaxResult>> RemoveAsync(int resourceId)
         {
-            await _apiResourceService.RemoveAsync(resourceId, HttpContext.User.ToIniciator(), HttpContext.RequestAborted);
+            await _apiResourceService.RemoveAsync(resourceId, SrvUser, HttpContext.RequestAborted);
 
             return Ok(AjaxResult.Success());
         }

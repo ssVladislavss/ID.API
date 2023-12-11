@@ -1,20 +1,22 @@
 ﻿using ID.Core.Users.Abstractions;
 using ID.Core.Users.Default;
 using ID.Core.Users.Exceptions;
+using ISDS.ServiceExtender.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using System.Text;
 
 namespace ID.Core.Users
 {
     public partial class UserService : IUserService
     {
-        protected readonly UserManager<UserID> _userManager;
+        protected readonly IDUserManager _userManager;
         protected readonly RoleManager<IdentityRole> _roleManager;
         protected readonly IdentityOptions _identityOptions;
 
         public UserService
-            (UserManager<UserID> userManager,
+            (IDUserManager userManager,
              RoleManager<IdentityRole> roleManager,
              IOptions<IdentityOptions>? identityDescriptor = null)
         {
@@ -23,7 +25,7 @@ namespace ID.Core.Users
             _identityOptions = identityDescriptor?.Value ?? new IdentityOptions();
         }
 
-        public virtual async Task<CreateUserResult> AddAsync(CreateUserData data, Iniciator iniciator, CancellationToken token = default)
+        public virtual async Task<CreateUserResult> AddAsync(CreateUserData data, ISrvUser iniciator, CancellationToken token = default)
         {
             var nowUser = await _userManager.FindByEmailAsync(data.User.Email);
             if (nowUser != null)
@@ -40,7 +42,7 @@ namespace ID.Core.Users
             }
 
             if (string.IsNullOrEmpty(data.Password))
-                data.Password = UserID.CreatePassword(_identityOptions.Password.RequiredLength);
+                data.Password = UserID.GeneratePassword(_identityOptions.Password.RequiredLength);
 
             var addingResult = await _userManager.CreateAsync(data.User, data.Password);
             if (!addingResult.Succeeded)
@@ -60,8 +62,31 @@ namespace ID.Core.Users
 
             return new CreateUserResult(data.User, roles, data.Password);
         }
-        public virtual async Task DeleteAsync(string userId, Iniciator iniciator, CancellationToken token = default)
+        public virtual async Task ChangeEmailAsync(string userId, string newEmail, ISrvUser iniciator, CancellationToken token = default)
         {
+            var currentUser = await _userManager.FindByIdAsync(userId)
+                ?? throw new UserChangeEmailException($"ChangeEmailAsync: user (UserId - {userId}, NewEmail - {newEmail}) was not found");
+
+            var setNewEmailResult = await _userManager.SetEmailAsync(currentUser, newEmail);
+            if (!setNewEmailResult.Succeeded)
+                throw new UserChangeEmailException($"ChangeEmailAsync: user (UserId - {currentUser.Id}, NewEmail - {newEmail}) the email address could not be changed. " +
+                    $"{string.Join(';', setNewEmailResult.Errors.Select(x => $"{x.Code} - {x.Description}"))}");
+        }
+        public virtual async Task ConfirmEmailAsync(string userId, string newEmail, string base64ConfirmToken, CancellationToken token = default)
+        {
+            var currentUser = await _userManager.FindByIdAsync(userId)
+                ?? throw new UserNotFoundException($"ConfirmEmailAsync: user (UserId - {userId}) was not found");
+
+            var verificationResult = await _userManager.ChangeEmailAsync(currentUser, newEmail, base64ConfirmToken);
+            if (!verificationResult.Succeeded)
+                throw new UserEmailConfirmException($"ConfirmEmailAsync: user (UserId - {currentUser.Id}, NewEmail - {newEmail}) the email address could not be verified. " +
+                    $"{string.Join(';', verificationResult.Errors.Select(x => $"{x.Code} - {x.Description}"))}");
+        }
+        public virtual async Task DeleteAsync(string userId, ISrvUser iniciator, CancellationToken token = default)
+        {
+            if (DefaultUserID.Users.Any(x => x.Id == userId))
+                throw new UserDefaultException($"DeleteAsync: user (UserId - {userId}) it is forbidden to delete the user");
+
             var user = await _userManager.FindByIdAsync(userId)
                 ?? throw new UserDeleteException($"DeleteAsync: user (UserId - {userId}) was not found");
 
@@ -73,7 +98,7 @@ namespace ID.Core.Users
                 throw new UserDeleteException($"DeleteAsync: user (UserId - {userId}) error deleting. " +
                     $"{string.Join(',', deleteResult.Errors.Select(x => $"{x.Code} - {x.Description}"))}");
         }
-        public virtual async Task<UserInfo> FindByEmailAsync(string email, Iniciator iniciator, CancellationToken token = default)
+        public virtual async Task<UserInfo> FindByEmailAsync(string email, ISrvUser iniciator, CancellationToken token = default)
         {
             var user = await _userManager.FindByEmailAsync(email)
                 ?? throw new UserNotFoundException($"FindByEmailAsync: user (Email - {email}) was not found");
@@ -95,7 +120,7 @@ namespace ID.Core.Users
 
             return new UserInfo(user, userRoles, currentUserClaims);
         }
-        public virtual async Task<UserInfo> FindByIdAsync(string userId, Iniciator iniciator, CancellationToken token = default)
+        public virtual async Task<UserInfo> FindByIdAsync(string userId, ISrvUser iniciator, CancellationToken token = default)
         {
             var user = await _userManager.FindByIdAsync(userId)
                 ?? throw new UserNotFoundException($"FindByEmailAsync: user (UserId - {userId}) was not found");
@@ -117,7 +142,7 @@ namespace ID.Core.Users
 
             return new UserInfo(user, userRoles, currentUserClaims);
         }
-        public virtual async Task<UserInfo> FindByNameAsync(string userName, Iniciator iniciator, CancellationToken token = default)
+        public virtual async Task<UserInfo> FindByNameAsync(string userName, ISrvUser iniciator, CancellationToken token = default)
         {
             var user = await _userManager.FindByNameAsync(userName)
                 ?? throw new UserNotFoundException($"FindByEmailAsync: user (UserName - {userName}) was not found");
@@ -139,7 +164,7 @@ namespace ID.Core.Users
 
             return new UserInfo(user, userRoles, currentUserClaims);
         }
-        public virtual async Task<IEnumerable<UserInfo>> GetAsync(Iniciator iniciator, CancellationToken token = default)
+        public virtual async Task<IEnumerable<UserInfo>> GetAsync(ISrvUser iniciator, CancellationToken token = default)
         {
             var usersInfo = new List<UserInfo>();
 
@@ -172,7 +197,7 @@ namespace ID.Core.Users
 
             return usersInfo;
         }
-        public virtual async Task<IEnumerable<UserInfo>> GetAsync(UserSearchFilter filter, Iniciator iniciator, CancellationToken token = default)
+        public virtual async Task<IEnumerable<UserInfo>> GetAsync(UserSearchFilter filter, ISrvUser iniciator, CancellationToken token = default)
         {
             var usersInfo = new List<UserInfo>();
 
@@ -220,14 +245,14 @@ namespace ID.Core.Users
 
             return usersInfo;
         }
-        public virtual async Task UpdateAsync(EditUserData data, Iniciator iniciator, CancellationToken token = default)
+        public virtual async Task UpdateAsync(EditUserData data, ISrvUser iniciator, CancellationToken token = default)
         {
+            if (DefaultUserID.Users.Any(x => x.Id == data.User.Id))
+                throw new UserDefaultException($"AddAsync: user (UserId - {data.User.Id}) it is forbidden to change the user");
+
             var currentUser = await _userManager.FindByIdAsync(data.User.Id)
                 ?? await _userManager.FindByEmailAsync(data.User.Email)
                 ?? throw new UserEditException($"UpdateAsync: user (Id - {data.User.Id}, Email - {data.User.Email}) was not found");
-
-            if (currentUser.Id == DefaultUserID.RootAdmin.Id)
-                throw new UserEditAccessExeption($"UpdateAsync: user (UserId - {currentUser.Id}) data cannot be changed");
 
             currentUser.LastName = data.User.LastName;
             currentUser.FirstName = data.User.FirstName;

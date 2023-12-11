@@ -24,15 +24,15 @@ using IdentityModel;
 using IdentityServer4.AccessTokenValidation;
 using IdentityServer4.AspNetIdentity;
 using IdentityServer4.EntityFramework.DbContexts;
+using ISDS.ServiceExtender.Logging.Extensions;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using RazorEngine.Configuration;
 using RazorEngine.Templating;
 using RazorEngine.Text;
 using System.Reflection;
-using System.Text.Json.Serialization;
+using System.Security.Claims;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -78,6 +78,8 @@ builder.Services.AddScoped<IApiScopeService, ApiScopeService>();
 builder.Services.AddScoped<IUserService, IDUserService>();
 builder.Services.AddScoped<IRoleService, RoleService>();
 
+builder.Services.AddExtenderLogging(ServiceLifetime.Singleton);
+
 builder.Services.AddScoped<IEmailProvider, EmailProvider>();
 builder.Services.Configure<SmtpOptions>(options =>
 {
@@ -104,6 +106,9 @@ builder.Services.Configure<IdentityOptions>(options =>
     options.ClaimsIdentity.EmailClaimType = JwtClaimTypes.Email;
     options.ClaimsIdentity.RoleClaimType = JwtClaimTypes.Role;
     options.ClaimsIdentity.UserNameClaimType = JwtClaimTypes.PreferredUserName;
+
+    options.SignIn.RequireConfirmedEmail = true;
+    options.User.RequireUniqueEmail = true;
 });
 
 builder.Services.AddIdentity<UserID, IdentityRole>(config =>
@@ -121,6 +126,7 @@ builder.Services.AddIdentity<UserID, IdentityRole>(config =>
 })
                 .AddRoles<IdentityRole>()
                 .AddEntityFrameworkStores<UserIDContext>()
+                .AddUserManager<IDUserManager>()
                 .AddDefaultTokenProviders();
 
 builder.Services.AddIdentityServer(options =>
@@ -178,6 +184,28 @@ builder.Services.AddAuthentication(IdentityServerAuthenticationDefaults.Authenti
                         NameClaimType = JwtClaimTypes.Name,
                         RoleClaimType = JwtClaimTypes.Role,
                         ClockSkew = TimeSpan.Zero
+                    };
+                    options.Events = new Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerEvents()
+                    {
+                        OnTokenValidated = async (context) =>
+                        {
+                            List<Claim> claims = new();
+
+                            var roles = context.Principal?.FindAll(ClaimTypes.Role);
+                            if (roles != null)
+                                if (roles.Any())
+                                    claims.AddRange(roles.Select(x => new Claim(JwtClaimTypes.Role, x.Value, x.ValueType)));
+
+                            if (claims.Any())
+                            {
+                                var identity = new ClaimsIdentity
+                                (claims, IdentityServerAuthenticationDefaults.AuthenticationScheme,
+                                JwtClaimTypes.Name, JwtClaimTypes.Role);
+                                context.Principal?.AddIdentity(identity);
+                            }
+
+                            await Task.CompletedTask;
+                        }
                     };
                 });
 

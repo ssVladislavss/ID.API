@@ -10,12 +10,27 @@ namespace ID.Core.Users
         public DateTime? BirthDate { get; set; }
         public List<int>? AvailableFunctionality { get; set; }
 
-        public static string CreatePassword(int length)
+        public static string GeneratePassword(int length)
         {
             Random random = new(DateTime.Now.Millisecond);
             const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789abcdefghijklmnopqrstuvwxyz";
 
             return new string(Enumerable.Repeat(chars, length).Select(st => st[random.Next(st.Length)]).ToArray());
+        }
+
+        public string GenerateCode(int codeLength)
+        {
+            string code = string.Empty;
+            Random random = new();
+
+            while (code.Length < codeLength)
+            {
+                var value = random.Next(0, 9).ToString();
+                if (!code.Contains(value)) code += value;
+                else continue;
+            }
+
+            return code;
         }
 
         /// <summary>

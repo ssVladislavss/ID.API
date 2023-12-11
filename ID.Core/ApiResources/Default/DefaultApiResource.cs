@@ -8,10 +8,10 @@ namespace ID.Core.ApiResources.Default
         public static IDApiResource[] Resources
             => new[] { ServiceID, ServiceIDUI };
         public static IDApiResource ServiceID
-            => new(0, new("service_id_api", "Service_ID_API")
+            => new(0, new(IDConstants.ApiResources.Default.Names.ServiceIDApiName, "Service_ID_API")
             {
-                Scopes = { "service_id_api" },
-                ApiSecrets = { new Secret("EFDFE86821574858940A162AE47534EA".ToSha256()) },
+                Scopes = { IDConstants.ApiScopes.Default.Names.ServiceIDApiName },
+                ApiSecrets = { new Secret(IDConstants.ApiResources.Default.Secrets.ServiceIDApiSecret.ToSha256()) },
                 UserClaims =
                 {
                     JwtClaimTypes.Name,
@@ -22,10 +22,10 @@ namespace ID.Core.ApiResources.Default
                 }
             });
         public static IDApiResource ServiceIDUI
-            => new(0, new("service_id_ui", "Service_ID_UI")
+            => new(0, new(IDConstants.ApiResources.Default.Names.ServiceIDUIName, "Service_ID_UI")
             {
-                Scopes = { "service_id_api" },
-                ApiSecrets = { new Secret("db35631558bd4fbbb025f1a9d0dfa00d".ToSha256()) },
+                Scopes = { IDConstants.ApiScopes.Default.Names.ServiceIDUIName },
+                ApiSecrets = { new Secret(IDConstants.ApiResources.Default.Secrets.ServiceIDUISecret.ToSha256()) },
                 UserClaims =
                 {
                     JwtClaimTypes.Name,

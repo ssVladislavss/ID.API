@@ -2,20 +2,19 @@
 using ID.Core.Roles;
 using ID.Core.Roles.Abstractions;
 using ID.Host.Infrastracture;
-using ID.Host.Infrastracture.Extensions;
 using ID.Host.Infrastracture.Mapping;
 using ID.Host.Infrastracture.Models.Roles;
 using IdentityServer4.AccessTokenValidation;
+using ISDS.ServiceExtender.Http;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
 
 namespace ID.Host.Controllers
 {
     [Route("api/role")]
     [ApiController]
-    [Authorize(AuthenticationSchemes = IdentityServerAuthenticationDefaults.AuthenticationScheme)]
-    public class RoleController : ControllerBase
+    [Authorize(AuthenticationSchemes = IdentityServerAuthenticationDefaults.AuthenticationScheme, Roles = IDConstants.Roles.RootAdmin)]
+    public class RoleController : BaseController<RequestIniciator>
     {
         private readonly IRoleService _roleService;
 
@@ -37,7 +36,7 @@ namespace ID.Host.Controllers
                     roleFilter = roleFilter.WithId(filter.Name);
             }
 
-            var roles = await _roleService.GetAsync(roleFilter, HttpContext.User.ToIniciator(), HttpContext.RequestAborted);
+            var roles = await _roleService.GetAsync(roleFilter, SrvUser, HttpContext.RequestAborted);
 
             return Ok(AjaxResult<IEnumerable<RoleViewModel>>.Success(roles.Select(x => new RoleViewModel(x))));
         }
@@ -45,7 +44,7 @@ namespace ID.Host.Controllers
         [HttpGet("{roleId}")]
         public async Task<ActionResult<AjaxResult<RoleViewModel>>> FindByIdAsync(string roleId)
         {
-            var role = await _roleService.FindByIdAsync(roleId, HttpContext.User.ToIniciator(), HttpContext.RequestAborted);
+            var role = await _roleService.FindByIdAsync(roleId, SrvUser, HttpContext.RequestAborted);
 
             return Ok(AjaxResult<RoleViewModel>.Success(new RoleViewModel(role)));
         }
@@ -53,7 +52,7 @@ namespace ID.Host.Controllers
         [HttpPost("create")]
         public async Task<ActionResult<AjaxResult<RoleViewModel>>> CreateAsync(CreateRoleViewModel data)
         {
-            var createdResult = await _roleService.CreateAsync(data.ToModel(), HttpContext.User.ToIniciator(), HttpContext.RequestAborted);
+            var createdResult = await _roleService.CreateAsync(data.ToModel(), SrvUser, HttpContext.RequestAborted);
 
             return Ok(AjaxResult<RoleViewModel>.Success(new RoleViewModel(createdResult)));
         }
@@ -61,7 +60,7 @@ namespace ID.Host.Controllers
         [HttpPut("edit")]
         public async Task<ActionResult<AjaxResult>> EditAsync(EditRoleViewModel data)
         {
-            await _roleService.EditAsync(data.ToModel(), HttpContext.User.ToIniciator(), HttpContext.RequestAborted);
+            await _roleService.EditAsync(data.ToModel(), SrvUser, HttpContext.RequestAborted);
 
             return Ok(AjaxResult.Success());
         }
@@ -69,7 +68,7 @@ namespace ID.Host.Controllers
         [HttpDelete("{roleId}/remove")]
         public async Task<ActionResult<AjaxResult>> RemoveAsync(string roleId)
         {
-            await _roleService.RemoveAsync(roleId, HttpContext.User.ToIniciator(), HttpContext.RequestAborted);
+            await _roleService.RemoveAsync(roleId, SrvUser, HttpContext.RequestAborted);
 
             return Ok(AjaxResult.Success());
         }

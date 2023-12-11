@@ -2,11 +2,11 @@
 using ID.Core.Clients;
 using ID.Core.Clients.Abstractions;
 using ID.Host.Infrastracture;
-using ID.Host.Infrastracture.Extensions;
 using ID.Host.Infrastracture.Mapping;
 using ID.Host.Infrastracture.Models.Clients;
 using IdentityServer4.AccessTokenValidation;
 using IdentityServer4.Models;
+using ISDS.ServiceExtender.Http;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -14,8 +14,8 @@ namespace ID.Host.Controllers
 {
     [Route("api/client")]
     [ApiController]
-    [Authorize(AuthenticationSchemes = IdentityServerAuthenticationDefaults.AuthenticationScheme)]
-    public class ClientController : ControllerBase
+    [Authorize(AuthenticationSchemes = IdentityServerAuthenticationDefaults.AuthenticationScheme, Roles = IDConstants.Roles.RootAdmin)]
+    public class ClientController : BaseController<RequestIniciator>
     {
         private readonly IClientService _clientService;
 
@@ -41,7 +41,7 @@ namespace ID.Host.Controllers
                     clientFilter = clientFilter.WithStatus(filter.Status.Value);
             }
 
-            var clients = await _clientService.GetAsync(clientFilter, HttpContext.User.ToIniciator(), HttpContext.RequestAborted);
+            var clients = await _clientService.GetAsync(clientFilter, SrvUser, HttpContext.RequestAborted);
 
             return Ok(AjaxResult<IEnumerable<Client>>.Success(clients));
         }
@@ -49,7 +49,7 @@ namespace ID.Host.Controllers
         [HttpGet("{clientId}")]
         public async Task<ActionResult<AjaxResult<Client>>> FindAsync(string clientId)
         {
-            var client = await _clientService.FindAsync(clientId, HttpContext.User.ToIniciator(), HttpContext.RequestAborted);
+            var client = await _clientService.FindAsync(clientId, SrvUser, HttpContext.RequestAborted);
 
             return Ok(AjaxResult<Client>.Success(client));
         }
@@ -57,7 +57,7 @@ namespace ID.Host.Controllers
         [HttpPost("create")]
         public async Task<ActionResult<AjaxResult<Client>>> CreateAsync(CreateClientViewModel model)
         {
-            var addedClient = await _clientService.AddAsync(model.ToModel(), HttpContext.User.ToIniciator(), HttpContext.RequestAborted);
+            var addedClient = await _clientService.AddAsync(model.ToModel(), SrvUser, HttpContext.RequestAborted);
 
             return Ok(AjaxResult<Client>.Success(addedClient));
         }
@@ -65,7 +65,7 @@ namespace ID.Host.Controllers
         [HttpPut("edit")]
         public async Task<ActionResult<AjaxResult>> EditAsync(EditClientViewModel model)
         {
-            await _clientService.EditAsync(model.ToModel(), HttpContext.User.ToIniciator(), HttpContext.RequestAborted);
+            await _clientService.EditAsync(model.ToModel(), SrvUser, HttpContext.RequestAborted);
 
             return Ok(AjaxResult.Success());
         }
@@ -73,7 +73,7 @@ namespace ID.Host.Controllers
         [HttpPut("edit/status")]
         public async Task<ActionResult> EditStatusAsync(EditClientStatusViewModel model)
         {
-            await _clientService.EditStatusAsync(model.ClientId, model.Status, HttpContext.User.ToIniciator(), HttpContext.RequestAborted);
+            await _clientService.EditStatusAsync(model.ClientId, model.Status, SrvUser, HttpContext.RequestAborted);
 
             return Ok(AjaxResult.Success());
         }
@@ -81,7 +81,7 @@ namespace ID.Host.Controllers
         [HttpDelete("{clientId}/remove")]
         public async Task<ActionResult<AjaxResult>> RemoveAsync(string clientId)
         {
-            await _clientService.RemoveAsync(clientId, HttpContext.User.ToIniciator(), HttpContext.RequestAborted);
+            await _clientService.RemoveAsync(clientId, SrvUser, HttpContext.RequestAborted);
 
             return Ok(AjaxResult.Success());
         }

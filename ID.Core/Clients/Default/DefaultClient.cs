@@ -11,15 +11,15 @@ namespace ID.Core.Clients.Default
         public static Client ServiceID
             => new()
             {
-                ClientName = "Service ID API",
+                ClientName = IDConstants.Client.Default.Names.ServiceIdApiName,
                 Enabled = true,
                 Claims = {
                     new(IDConstants.Client.Claims.Types.ClientType, IDConstants.Client.Claims.Values.Base),
-                    new(IDConstants.Client.Claims.Types.ClientName, "Service ID API")
+                    new(IDConstants.Client.Claims.Types.ClientName, IDConstants.Client.Default.Names.ServiceIdApiName)
                 },
 
-                ClientId = "9C014C46-7A09-49A5-8264-99CD83495D28",
-                ClientSecrets = { new Secret("4A534858408B41FFADE3FBC533CEE00E".ToSha256(), "4A534858408B41FFADE3FBC533CEE00E") },
+                ClientId = IDConstants.Client.Default.Ids.ServiceIDApiId,
+                ClientSecrets = { new Secret(IDConstants.Client.Default.Secrets.ServiceIdApiSecret.ToSha256(), IDConstants.Client.Default.Secrets.ServiceIdApiSecret) },
                 AllowedGrantTypes = GrantTypes.ResourceOwnerPasswordAndClientCredentials,
                 AllowedCorsOrigins = { "https://localhost:44338", "https://localhost:44333" },
                 RedirectUris = { },
@@ -35,22 +35,22 @@ namespace ID.Core.Clients.Default
                     IdentityServerConstants.StandardScopes.Profile,
                     IdentityServerConstants.StandardScopes.Email,
                     IdentityServerConstants.StandardScopes.OfflineAccess,
-                    "service_id_api",
-                    "service_id_ui"
+                    IDConstants.ApiScopes.Default.Names.ServiceIDApiName,
+                    IDConstants.ApiScopes.Default.Names.ServiceIDUIName
                 }
             };
         public static Client ServiceIDUI
             => new()
             {
-                ClientName = "Service ID UI",
+                ClientName = IDConstants.Client.Default.Names.ServiceIdUIName,
                 Enabled = true,
                 Claims = {
                     new(IDConstants.Client.Claims.Types.ClientType, IDConstants.Client.Claims.Values.Base),
-                    new(IDConstants.Client.Claims.Types.ClientName, "Service ID UI")
+                    new(IDConstants.Client.Claims.Types.ClientName, IDConstants.Client.Default.Names.ServiceIdUIName)
                 },
 
-                ClientId = "32c2c3a8-b8ed-4cbd-8e36-c8312fab0cc2",
-                ClientSecrets = { new Secret("330c4cee9b674891b02ead42cc4a4d89".ToSha256(), "330c4cee9b674891b02ead42cc4a4d89") },
+                ClientId = IDConstants.Client.Default.Ids.ServiceIDUIId,
+                ClientSecrets = { new Secret(IDConstants.Client.Default.Secrets.ServiceIdUISecret.ToSha256(), IDConstants.Client.Default.Secrets.ServiceIdUISecret) },
                 AllowedGrantTypes = GrantTypes.ResourceOwnerPasswordAndClientCredentials,
                 AllowedCorsOrigins = { "https://localhost:44333" },
                 RedirectUris = { },
@@ -66,8 +66,8 @@ namespace ID.Core.Clients.Default
                     IdentityServerConstants.StandardScopes.Profile,
                     IdentityServerConstants.StandardScopes.Email,
                     IdentityServerConstants.StandardScopes.OfflineAccess,
-                    "service_id_api",
-                    "service_id_ui"
+                    IDConstants.ApiScopes.Default.Names.ServiceIDApiName,
+                    IDConstants.ApiScopes.Default.Names.ServiceIDUIName
                 }
             };
     }

@@ -22,7 +22,7 @@ namespace ID.Host.Infrastracture
                 _ => throw new ArgumentException(),
             };
 
-            var addresses = configuration.GetSection("").Get<ConfigurationAddresses>() ?? new ConfigurationAddresses();
+            var addresses = configuration.GetSection("addresses").Get<ConfigurationAddresses>() ?? new ConfigurationAddresses();
 
             if(addresses.Dev != null)
             {

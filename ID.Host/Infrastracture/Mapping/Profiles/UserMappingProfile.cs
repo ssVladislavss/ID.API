@@ -13,6 +13,7 @@ namespace ID.Host.Infrastracture.Mapping.Profiles
                 .ForMember(dest => dest.User, x => x.Ignore())
                 .ForMember(dest => dest.RoleNames, x => x.Ignore())
                 .ForMember(dest => dest.Password, x => x.Ignore())
+                .ForMember(dest => dest.ClientId, x => x.Ignore())
                 .ConstructUsing((data, context) =>
                 {
                     UserID createUser = new()
@@ -20,12 +21,12 @@ namespace ID.Host.Infrastracture.Mapping.Profiles
                         LastName = data.LastName,
                         FirstName = data.FirstName,
                         Email = data.Email,
-                        EmailConfirmed = true,
+                        EmailConfirmed = false,
                         SecondName = data.SecondName,
                         UserName = data.Email
                     };
 
-                    return new CreateUserData(createUser, data.RoleNames, data.Password);
+                    return new CreateUserData(createUser, data.RoleNames, data.Password, data.ClientId);
                 });
 
             CreateMap<EditUserViewModel, EditUserData>()

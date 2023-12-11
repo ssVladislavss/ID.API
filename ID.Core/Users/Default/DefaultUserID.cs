@@ -5,6 +5,13 @@ namespace ID.Core.Users.Default
     public class DefaultUserID
     {
         public const string DefaultPassword = "12Qwaszx$";
+
+        public static UserID[] Users
+            => new[]
+            {
+                RootAdmin
+            };
+
         public static UserID RootAdmin
             => new()
             {

@@ -1,5 +1,7 @@
 ﻿using ID.Core.Roles.Abstractions;
+using ID.Core.Roles.Default;
 using ID.Core.Roles.Exceptions;
+using ISDS.ServiceExtender.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
@@ -15,7 +17,7 @@ namespace ID.Core.Roles
             _roleManager = roleManager ?? throw new ArgumentNullException(nameof(roleManager));
         }
 
-        public virtual async Task<ServiceRoleResult> CreateAsync(IdentityRole creatingRole, Iniciator iniciator, CancellationToken token = default)
+        public virtual async Task<ServiceRoleResult> CreateAsync(IdentityRole creatingRole, ISrvUser iniciator, CancellationToken token = default)
         {
             var currentRole = await _roleManager.FindByNameAsync(creatingRole.Name)
                 ?? await _roleManager.FindByIdAsync(creatingRole.Id);
@@ -32,8 +34,11 @@ namespace ID.Core.Roles
 
             return new ServiceRoleResult(creatingRole);
         }
-        public virtual async Task EditAsync(EditingRoleData updatingData, Iniciator inicaitor, CancellationToken token = default)
+        public virtual async Task EditAsync(EditingRoleData updatingData, ISrvUser inicaitor, CancellationToken token = default)
         {
+            if (DefaultRole.Roles.Any(x => x.Id == updatingData.Role.Id))
+                throw new RoleDefaultException($"EditAsync: role (RoleId - {updatingData.Role.Id}) the role cannot be changed");
+
             var currentRole = await _roleManager.FindByIdAsync(updatingData.Role.Id)
                 ?? throw new RoleEditException($"EditAsync: role (RoleId - {updatingData.Role.Id}) was not found");
 
@@ -51,7 +56,7 @@ namespace ID.Core.Roles
                 if(currentRoleClaim.Type != IDConstants.Roles.Claims.Types.RoleType)
                     await _roleManager.RemoveClaimAsync(currentRole, currentRoleClaim);
 
-            foreach (var claim in updatingData.Claims)
+            foreach (var claim in updatingData.Claims.Where(x => x.Type != IDConstants.Roles.Claims.Types.RoleType))
             {
                 var addClaimResult = await _roleManager.AddClaimAsync(currentRole, claim);
                 if (!addClaimResult.Succeeded)
@@ -60,7 +65,7 @@ namespace ID.Core.Roles
                         $"{string.Join(';', addClaimResult.Errors.Select(x => $"{x.Code} - {x.Description}"))}");
             }
         }
-        public virtual async Task<ServiceRoleResult> FindByIdAsync(string roleId, Iniciator iniciator, CancellationToken token = default)
+        public virtual async Task<ServiceRoleResult> FindByIdAsync(string roleId, ISrvUser iniciator, CancellationToken token = default)
         {
             var role = await _roleManager.FindByIdAsync(roleId)
                 ?? throw new RoleNotFoundException($"FindByIdAsync: role (RoleId - {roleId}) was not found");
@@ -69,7 +74,7 @@ namespace ID.Core.Roles
 
             return new ServiceRoleResult(role, roleClaims);
         }
-        public virtual async Task<IEnumerable<ServiceRoleResult>> GetAsync(Iniciator iniciator, CancellationToken token = default)
+        public virtual async Task<IEnumerable<ServiceRoleResult>> GetAsync(ISrvUser iniciator, CancellationToken token = default)
         {
             List<ServiceRoleResult> result = new List<ServiceRoleResult>();
 
@@ -87,7 +92,7 @@ namespace ID.Core.Roles
 
             return result;
         }
-        public virtual async Task<IEnumerable<ServiceRoleResult>> GetAsync(RoleSearchFilter filter, Iniciator iniciator, CancellationToken token = default)
+        public virtual async Task<IEnumerable<ServiceRoleResult>> GetAsync(RoleSearchFilter filter, ISrvUser iniciator, CancellationToken token = default)
         {
             List<ServiceRoleResult> result = new List<ServiceRoleResult>();
 
@@ -110,8 +115,11 @@ namespace ID.Core.Roles
 
             return result;
         }
-        public virtual async Task RemoveAsync(string roleId, Iniciator iniciator, CancellationToken token = default)
+        public virtual async Task RemoveAsync(string roleId, ISrvUser iniciator, CancellationToken token = default)
         {
+            if (DefaultRole.Roles.Any(x => x.Id == roleId))
+                throw new RoleDefaultException($"RemoveAsync: role (RoleId - {roleId}) the role cannot be deleted");
+
             var removingRole = await _roleManager.FindByIdAsync(roleId)
                 ?? throw new RoleRemoveException($"RemoveAsync: role (RoleId - {roleId}) was not found");
 

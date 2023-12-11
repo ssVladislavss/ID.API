@@ -26,8 +26,14 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Content Update="App_Data\Notify\Email\BaseEmailConfirm.cshtml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Update="App_Data\Notify\Email\BaseIDUserRegistration.cshtml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Update="NLog.config">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
 

@@ -2,6 +2,7 @@
 using ID.Core.ApiScopes;
 using ID.Core.ApiScopes.Abstractions;
 using IdentityServer4.EntityFramework.DbContexts;
+using IdentityServer4.EntityFramework.Entities;
 using IdentityServer4.EntityFramework.Mappers;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
@@ -45,6 +46,18 @@ namespace ID.Data.EF.Repositories
 
             if(nowScope != null)
             {
+                var currentClientScopes = await _context.Set<ClientScope>().Where(x => x.Scope == nowScope.Name).ToListAsync(token);
+
+                if (currentClientScopes.Any())
+                {
+                    foreach (var clientScope in currentClientScopes)
+                    {
+                        clientScope.Scope = entity.Name;
+
+                        _context.Entry(clientScope).CurrentValues.SetValues(clientScope);
+                    }
+                }
+
                 entity.Id = nowScope.Id;
 
                 _context.Entry(nowScope).CurrentValues.SetValues(entity);

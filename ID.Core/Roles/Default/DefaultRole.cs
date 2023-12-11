@@ -5,6 +5,12 @@ namespace ID.Core.Roles.Default
 {
     public class DefaultRole
     {
+        public static IdentityRole[] Roles
+            => new[]
+            {
+                RootAdminRole
+            };
+
         public static IdentityRole RootAdminRole
             => new()
             {
