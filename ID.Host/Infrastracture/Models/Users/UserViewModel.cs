@@ -16,6 +16,8 @@ namespace ID.Host.Infrastracture.Models.Users
         public string? FirstName { get; set; }
         public string? SecondName { get; set; }
         public DateTime? BirthDate { get; set; }
+        public bool IsLocked { get; set; }
+        public DateTimeOffset? LockedEndDate { get; set; }
         public IEnumerable<RoleViewModel> Roles { get; set; }
         public IEnumerable<ClaimViewModel> Claims { get; set; }
 
@@ -31,6 +33,8 @@ namespace ID.Host.Infrastracture.Models.Users
             FirstName = user.FirstName;
             SecondName = user.SecondName;
             BirthDate = user.BirthDate;
+            IsLocked = user.LockoutEnabled;
+            LockedEndDate = user.LockoutEnd;
             Roles = Enumerable.Empty<RoleViewModel>();
             Claims = Enumerable.Empty<ClaimViewModel>();
         }
@@ -47,6 +51,8 @@ namespace ID.Host.Infrastracture.Models.Users
             FirstName = userInfo.User.FirstName;
             SecondName = userInfo.User.SecondName;
             BirthDate = userInfo.User.BirthDate;
+            IsLocked = userInfo.User.LockoutEnabled;
+            LockedEndDate = userInfo.User.LockoutEnd;
             Roles = userInfo.Roles.Select(x => new RoleViewModel(x));
             Claims = userInfo.Claims.Select(x => new ClaimViewModel() { Type = x.Type, Value = x.Value });
         }
@@ -63,6 +69,8 @@ namespace ID.Host.Infrastracture.Models.Users
             FirstName = createResult.CreatedUser.FirstName;
             SecondName = createResult.CreatedUser.SecondName;
             BirthDate = createResult.CreatedUser.BirthDate;
+            IsLocked = createResult.CreatedUser.LockoutEnabled;
+            LockedEndDate = createResult.CreatedUser.LockoutEnd;
             Roles = createResult.UserRoles.Select(x => new RoleViewModel(x));
             Claims = Enumerable.Empty<ClaimViewModel>();
         }

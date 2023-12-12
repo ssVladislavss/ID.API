@@ -3,6 +3,7 @@ using Builder.Messages.Html.Abstractions;
 using EmailSending;
 using EmailSending.Abstractions;
 using EmailSending.Configurations;
+using ID.Core;
 using ID.Core.ApiResources;
 using ID.Core.ApiResources.Abstractions;
 using ID.Core.ApiScopes;
@@ -28,6 +29,7 @@ using ISDS.ServiceExtender.Logging.Extensions;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
 using RazorEngine.Configuration;
 using RazorEngine.Templating;
 using RazorEngine.Text;
@@ -77,6 +79,7 @@ builder.Services.AddScoped<IApiScopeRepository, ApiScopeRepository>(opt => new A
 builder.Services.AddScoped<IApiScopeService, ApiScopeService>();
 builder.Services.AddScoped<IUserService, IDUserService>();
 builder.Services.AddScoped<IRoleService, RoleService>();
+builder.Services.AddScoped<IVerificationService, IDUserVerificationCodeService>();
 
 builder.Services.AddExtenderLogging(ServiceLifetime.Singleton);
 
@@ -109,14 +112,20 @@ builder.Services.Configure<IdentityOptions>(options =>
 
     options.SignIn.RequireConfirmedEmail = true;
     options.User.RequireUniqueEmail = true;
+    options.Password.RequiredLength = 5;
+    options.Password.RequireNonAlphanumeric = false;
+    options.Password.RequireDigit = false;
+    options.Password.RequireLowercase = false;
+    options.Password.RequireUppercase = false;
 });
 
 builder.Services.AddIdentity<UserID, IdentityRole>(config =>
 {
-    config.Password.RequiredLength = 4;
-    config.Password.RequireDigit = false;
+    config.Password.RequiredLength = 5;
     config.Password.RequireNonAlphanumeric = false;
+    config.Password.RequireDigit = false;
     config.Password.RequireLowercase = false;
+    config.Password.RequireUppercase = false;
     config.User.RequireUniqueEmail = true;
 
     config.ClaimsIdentity.UserNameClaimType = JwtClaimTypes.PreferredUserName;
@@ -160,14 +169,57 @@ builder.Services.AddIdentityServer(options =>
         options.EnableTokenCleanup = true;
         options.TokenCleanupInterval = 1800;
     })
-    .AddResourceOwnerValidator<ResourceOwnerPasswordValidator<UserID>>()
     .AddDeveloperSigningCredential()
     .AddAspNetIdentity<UserID>()
+    .AddResourceOwnerValidator<ResourceOwnerPasswordValidator<UserID>>()
     .AddProfileService<IDProfileService>();
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new OpenApiInfo { Title = "ID - identity server (api)", Version = "v1" });
+    c.AddSecurityDefinition("oauth2", new OpenApiSecurityScheme
+    {
+        Type = SecuritySchemeType.OAuth2,
+        Flows = new OpenApiOAuthFlows
+        {
+            ClientCredentials = new OpenApiOAuthFlow
+            {
+                TokenUrl = new Uri(AppSettings.ServiceAddresses?.IdentityUrl?.AbsoluteUri + "connect/token"),
+                Scopes = new Dictionary<string, string>()
+                                {
+                                    { IDConstants.ApiScopes.Default.Names.ServiceIDApiName, "ID API" }
+                                }
+            },
+            Password = new OpenApiOAuthFlow
+            {
+                TokenUrl = new Uri(AppSettings.ServiceAddresses?.IdentityUrl?.AbsoluteUri + "connect/token"),
+                Scopes = new Dictionary<string, string>()
+                                {
+                                    { IDConstants.ApiScopes.Default.Names.ServiceIDApiName, "ID API" }
+                                }
+            }
+        }
+    });
+    c.AddSecurityRequirement(new OpenApiSecurityRequirement
+                    {
+                        {
+                            new OpenApiSecurityScheme
+                            {
+                                Reference = new OpenApiReference
+                                {
+                                    Type = ReferenceType.SecurityScheme,
+                                    Id = "oauth2"
+                                },
+                                Scheme = "oath2",
+                                Name = "Bearer",
+                                In = ParameterLocation.Header
+                            },
+                            new List<string>()
+                        }
+                    });
+});
 builder.Services.AddCors();
 
 builder.Services.AddAuthentication(IdentityServerAuthenticationDefaults.AuthenticationScheme)
@@ -221,8 +273,15 @@ app.UseMiddleware<ExceptionHandlerMiddleware>();
 
 if (app.Environment.IsDevelopment())
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
+    app.UseSwagger()
+       .UseSwaggerUI(c =>
+       {
+           c.SwaggerEndpoint("/swagger/v1/swagger.json", "API - identity server");
+           c.DocExpansion(Swashbuckle.AspNetCore.SwaggerUI.DocExpansion.None);
+           c.DocumentTitle = "API - identity server";
+           c.OAuthClientId(IDConstants.Client.Default.Ids.ServiceIDApiId);
+           c.OAuthClientSecret(IDConstants.Client.Default.Secrets.ServiceIdApiSecret);
+       });
 }
 
 app.UseCors(opt =>

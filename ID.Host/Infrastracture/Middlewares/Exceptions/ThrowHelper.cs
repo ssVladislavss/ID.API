@@ -47,6 +47,18 @@ namespace ID.Host.Infrastracture.Middlewares.Exceptions
                 UserEditAccessExeption => AjaxResult.Error("Данные этого пользователя доступны только для чтения"),
                 UserRemoveAccessException => AjaxResult.Error("Данные этого пользователя доступны только для чтения"),
                 UserDefaultException => AjaxResult.Error("Работа над пользователем запрещена"),
+                UserFindAccessException => AjaxResult.Error("Доступ запрещён"),
+                UserResetConfirmPasswordException => AjaxResult.Error("Не удалось сбросить пароль"),
+                UserEmailConfirmException => AjaxResult.Error("Не удалось подтвердить электронный адрес"),
+                UserAddAccessException => AjaxResult.Error("Доступ запрещён"),
+                UserChangePasswordException => AjaxResult.Error("Не удалось изменить пароль"),
+                UserChangePhoneNumberException => AjaxResult.Error("Не удалось изменить номер телефона"),
+                UserConfirmPhoneNumberException => AjaxResult.Error("Не удалось подвердить номер телефона"),
+                UserSetLockoutEnabledException => AjaxResult.Error("Не удалось заблокировать аккаунт"),
+                UserEmailNotifyDeliveredException => AjaxResult.Error("Не удалось доставить email сообщение"),
+                UserCodeAddException => AjaxResult.Error("Не удалось сохранить код подтверждения пользователя"),
+                UserVerifyCodeException => AjaxResult.Error("Полученный код не валиден"),
+                UserVerifyCodeExpireException => AjaxResult.Error("Время жизни полученного когда истекло"),
 
                 RoleAddException => AjaxResult.Error("Не удалось зарегистрировать роль"),
                 RoleEditException => AjaxResult.Error("Не удалось сохранить данные роли"),
@@ -55,8 +67,6 @@ namespace ID.Host.Infrastracture.Middlewares.Exceptions
                 RoleNotFoundException => AjaxResult.Error("Роль не найдена"),
                 RoleAddClaimException => AjaxResult.Error("Не удалось добавить утверждения к роли"),
                 RoleDefaultException => AjaxResult.Error("Работа над ролью запрещена"),
-
-                EmailNotifyOnRegistredUserException => AjaxResult.Error("Не удалось отправить email сообщение"),
 
                 _ => AjaxResult.Error("Произошла неизвестная ошибка"),
             };

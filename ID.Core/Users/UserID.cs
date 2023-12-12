@@ -23,9 +23,16 @@ namespace ID.Core.Users
             string code = string.Empty;
             Random random = new();
 
-            while (code.Length < codeLength)
+            int numberOfAttempts = 1000;
+
+            while (code.Length < codeLength && numberOfAttempts != 0)
             {
-                var value = random.Next(0, 9).ToString();
+                numberOfAttempts--;
+
+                var value = codeLength >= 10 
+                    ? random.Next(0, 99).ToString()
+                    : random.Next(0, 9).ToString();
+
                 if (!code.Contains(value)) code += value;
                 else continue;
             }

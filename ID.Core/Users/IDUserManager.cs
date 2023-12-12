@@ -41,5 +41,26 @@ namespace ID.Core.Users
 
             return await base.ChangeEmailAsync(user, newEmail, token);
         }
+
+        public override async Task<string> GeneratePasswordResetTokenAsync(UserID user)
+        {
+            var confirmationTokenResult = await base.GeneratePasswordResetTokenAsync(user);
+
+            var bytesInToken = Encoding.UTF8.GetBytes(confirmationTokenResult);
+
+            confirmationTokenResult = Convert.ToBase64String(bytesInToken).Replace('+', '-').Replace('/', '_');
+
+            return confirmationTokenResult;
+        }
+
+        public override async Task<IdentityResult> ResetPasswordAsync(UserID user, string token, string newPassword)
+        {
+            token = token.Replace('-', '+').Replace('_', '/');
+
+            var bytesTokenFromBase64 = Convert.FromBase64String(token);
+            token = Encoding.UTF8.GetString(bytesTokenFromBase64);
+
+            return await base.ResetPasswordAsync(user, token, newPassword);
+        }
     }
 }

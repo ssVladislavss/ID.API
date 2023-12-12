@@ -59,21 +59,6 @@ namespace ID.Data.Configurations.Users.Profile
             var userRoleClaims = new Dictionary<string, Claim>();
             var userSpecifiedClaims = new Dictionary<string, Claim>();
 
-            //foreach (var roleName in userRoleNames)
-            //{
-            //    var role = await RoleManager.FindByNameAsync(roleName);
-            //    if(role != null)
-            //    {
-            //        var roleClaims = await RoleManager.GetClaimsAsync(role);
-
-            //        foreach (var item in roleClaims)
-            //            userRoleClaims.Add($"role_{role.Name}_{item.Type}", item);
-            //    }
-            //}
-
-            //foreach (var claim in userClaimsSpecified)
-            //    userSpecifiedClaims.Add($"user_{claim.Type}", claim);
-
             var claims = new List<Claim>(currentPrincipal.Claims);
 
             if (!string.IsNullOrEmpty(user.LastName))
@@ -92,13 +77,6 @@ namespace ID.Data.Configurations.Users.Profile
                 claims.Add(new Claim(JwtClaimTypes.PhoneNumber, user.PhoneNumber));
 
             claims.AddRange(userRoleNames.Select(x => new Claim(JwtClaimTypes.Role, x)));
-
-            //if (userRoleClaims.Count > 0)
-            //    foreach (var roleClaim in userRoleClaims)
-            //        claims.Add(new Claim(roleClaim.Key, roleClaim.Value.Value));
-            //if (userSpecifiedClaims.Count > 0)
-            //    foreach (var specifiedClaim in userSpecifiedClaims)
-            //        claims.Add(new Claim(specifiedClaim.Key, specifiedClaim.Value.Value));
 
             claims = claims.Distinct().ToList();
 

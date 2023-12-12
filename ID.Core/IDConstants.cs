@@ -82,10 +82,14 @@
         }
         public static class Users
         {
-            public static class VerifyCodeTypes
+            public static class ConfirmationCodeProviders
             {
-                public const string CodeOnEmail = "code_on_email";
-                public const string CodeOnPhone = "code_on_phone";
+                public const string IDProvider = "identity_server";
+            }
+            public static class ConfirmationCodeNames
+            {
+                public const string BaseCode = "confirmation_code";
+                public const string CodeBySetLockoutEnabled = "confirmation_code_to_lock";
             }
         }
     }

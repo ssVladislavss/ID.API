@@ -5,7 +5,6 @@ using ISDS.ServiceExtender.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
-using System.Text;
 
 namespace ID.Core.Users
 {
@@ -27,11 +26,16 @@ namespace ID.Core.Users
 
         public virtual async Task<CreateUserResult> AddAsync(CreateUserData data, ISrvUser iniciator, CancellationToken token = default)
         {
+            if (data.RoleNames.Any(x => x == IDConstants.Roles.RootAdmin) && !iniciator.IsInRole(IDConstants.Roles.RootAdmin))
+                throw new UserAddAccessException($"AddAsync: user (Email - {data.User.Email}, Roles - {string.Join(';', data.RoleNames)}) " +
+                    $"the user could not be registered because the initiator does not have rights to register system administrators " +
+                    $"(Iniciator - {iniciator.Email}, ClientId - {iniciator.ClientId}, Roles - {string.Join(';', iniciator.Role ?? Enumerable.Empty<string>())})");
+
             var nowUser = await _userManager.FindByEmailAsync(data.User.Email);
             if (nowUser != null)
                 throw new UserAddExistException($"AddAsync: user (Email - {data.User.Email}) was found");
 
-            List<IdentityRole> roles = new List<IdentityRole>();
+            List<IdentityRole> roles = new();
 
             foreach (var roleName in data.RoleNames)
             {
@@ -62,7 +66,7 @@ namespace ID.Core.Users
 
             return new CreateUserResult(data.User, roles, data.Password);
         }
-        public virtual async Task ChangeEmailAsync(string userId, string newEmail, ISrvUser iniciator, CancellationToken token = default)
+        public virtual async Task SetEmailAsync(string userId, string newEmail, ISrvUser iniciator, CancellationToken token = default)
         {
             var currentUser = await _userManager.FindByIdAsync(userId)
                 ?? throw new UserChangeEmailException($"ChangeEmailAsync: user (UserId - {userId}, NewEmail - {newEmail}) was not found");
@@ -72,15 +76,79 @@ namespace ID.Core.Users
                 throw new UserChangeEmailException($"ChangeEmailAsync: user (UserId - {currentUser.Id}, NewEmail - {newEmail}) the email address could not be changed. " +
                     $"{string.Join(';', setNewEmailResult.Errors.Select(x => $"{x.Code} - {x.Description}"))}");
         }
+        public virtual async Task<string> ResetPasswordAsync(string userId, ISrvUser iniciator, CancellationToken token = default)
+        {
+            var currentUser = await _userManager.FindByIdAsync(userId)
+                ?? throw new UserChangePasswordException($"ResetPasswordAsync: user (UserId - {userId}) was not found");
+
+            var newPassword = UserID.GeneratePassword(_identityOptions.Password.RequiredLength);
+
+            var removeCurrentPasswordResult = await _userManager.RemovePasswordAsync(currentUser);
+            if (!removeCurrentPasswordResult.Succeeded)
+                throw new UserChangePasswordException($"ResetPasswordAsync: user (UserId - {userId}) the current password could not be deleted. " +
+                    $"{string.Join(';', removeCurrentPasswordResult.Errors.Select(x => $"{x.Code} - {x.Description}"))}");
+
+            var setNewPasswordResult = await _userManager.AddPasswordAsync(currentUser, newPassword);
+            if (!setNewPasswordResult.Succeeded)
+                throw new UserChangePasswordException($"ResetPasswordAsync: user (UserId - {userId}) the new password could not be added. " +
+                    $"{string.Join(';', setNewPasswordResult.Errors.Select(x => $"{x.Code} - {x.Description}"))}");
+
+            return newPassword;
+        }
+        public virtual async Task SetPhoneNumberAsync(string userId, string newPhoneNumber, CancellationToken token = default)
+        {
+            var currentUser = await _userManager.FindByIdAsync(userId)
+                ?? throw new UserChangePhoneNumberException($"ChangePhoneNumberAsync: user (UserId - {userId}, NewPhoneNumber - {newPhoneNumber}) was not found");
+
+            var changePhoneNumberResult = await _userManager.SetPhoneNumberAsync(currentUser, newPhoneNumber);
+            if(!changePhoneNumberResult.Succeeded)
+                throw new UserChangePhoneNumberException($"ChangePhoneNumberAsync: user (UserId - {userId}) couldn't save a new phone number. " +
+                    $"{string.Join(';', changePhoneNumberResult.Errors.Select(x => $"{x.Code} - {x.Description}"))}");
+        }
+        public virtual async Task ChangePasswordAsync(string userId, string currentPassword, string newPassword, ISrvUser iniciator, CancellationToken token = default)
+        {
+            var currentUser = await _userManager.FindByIdAsync(userId)
+                ?? throw new UserChangePasswordException($"ChangePasswordAsync: user (UserId - {userId}) was not found");
+
+            var changePasswordResult = await _userManager.ChangePasswordAsync(currentUser, currentPassword, newPassword);
+            if (!changePasswordResult.Succeeded)
+                throw new UserChangePasswordException($"ChangePasswordAsync: user " +
+                    $"(UserId - {userId}, OldPassword - {currentPassword}, NewPassword - {newPassword}) the new password could not be added. " +
+                    $"{string.Join(';', changePasswordResult.Errors.Select(x => $"{x.Code} - {x.Description}"))}");
+        }
         public virtual async Task ConfirmEmailAsync(string userId, string newEmail, string base64ConfirmToken, CancellationToken token = default)
         {
             var currentUser = await _userManager.FindByIdAsync(userId)
-                ?? throw new UserNotFoundException($"ConfirmEmailAsync: user (UserId - {userId}) was not found");
+                ?? throw new UserEmailConfirmException($"ConfirmEmailAsync: user (UserId - {userId}) was not found");
 
             var verificationResult = await _userManager.ChangeEmailAsync(currentUser, newEmail, base64ConfirmToken);
             if (!verificationResult.Succeeded)
                 throw new UserEmailConfirmException($"ConfirmEmailAsync: user (UserId - {currentUser.Id}, NewEmail - {newEmail}) the email address could not be verified. " +
                     $"{string.Join(';', verificationResult.Errors.Select(x => $"{x.Code} - {x.Description}"))}");
+        }
+        public virtual async Task ConfirmPhoneNumberAsync(string userId, string newPhoneNumber, string base64ConfirmToken, CancellationToken token = default)
+        {
+            var currentUser = await _userManager.FindByIdAsync(userId)
+                ?? throw new UserConfirmPhoneNumberException($"ConfirmPhoneNumberAsync: user (UserId - {userId}) was not found");
+
+            var verificationResult = await _userManager.ChangePhoneNumberAsync(currentUser, newPhoneNumber, base64ConfirmToken);
+            if (!verificationResult.Succeeded)
+                throw new UserConfirmPhoneNumberException($"ConfirmPhoneNumberAsync: user (UserId - {currentUser.Id}, NewPhoneNumber - {newPhoneNumber}) the specified phone number and token are not valid. " +
+                    $"{string.Join(';', verificationResult.Errors.Select(x => $"{x.Code} - {x.Description}"))}");
+        }
+        public virtual async Task<string> ConfirmResetPasswordAsync(string userId, string base64ConfirmToken, string? clientId = null, CancellationToken token = default)
+        {
+            var currentUser = await _userManager.FindByIdAsync(userId)
+                ?? throw new UserResetConfirmPasswordException($"ConfirmPasswordAsync: user (UserId - {userId}) was not found");
+
+            var newPassword = UserID.GeneratePassword(_identityOptions.Password.RequiredLength);
+
+            var resetPasswordResult = await _userManager.ResetPasswordAsync(currentUser, base64ConfirmToken, newPassword);
+            if (!resetPasswordResult.Succeeded)
+                throw new UserResetConfirmPasswordException($"ConfirmPasswordAsync: user (UserId - {currentUser.Id}) the password could not be reset. " +
+                    $"{string.Join(';', resetPasswordResult.Errors.Select(x => $"{x.Code} - {x.Description}"))}");
+
+            return newPassword;
         }
         public virtual async Task DeleteAsync(string userId, ISrvUser iniciator, CancellationToken token = default)
         {
@@ -93,6 +161,9 @@ namespace ID.Core.Users
             if (user.Id == DefaultUserID.RootAdmin.Id)
                 throw new UserRemoveAccessException($"DeleteAsync: user (UserId - {user.Id}) cannot be deleted");
 
+            if (await _userManager.IsInRoleAsync(user, IDConstants.Roles.RootAdmin) && !iniciator.IsInRole(IDConstants.Roles.RootAdmin))
+                throw new UserRemoveAccessException($"DeleteAsync: user (UserId - {user.Id}) the initiator (Email - {iniciator.Email}) does not have access to delete user data");
+
             var deleteResult = await _userManager.DeleteAsync(user);
             if (!deleteResult.Succeeded)
                 throw new UserDeleteException($"DeleteAsync: user (UserId - {userId}) error deleting. " +
@@ -102,6 +173,9 @@ namespace ID.Core.Users
         {
             var user = await _userManager.FindByEmailAsync(email)
                 ?? throw new UserNotFoundException($"FindByEmailAsync: user (Email - {email}) was not found");
+
+            if (await _userManager.IsInRoleAsync(user, IDConstants.Roles.RootAdmin) && !iniciator.IsInRole(IDConstants.Roles.RootAdmin))
+                throw new UserFindAccessException($"FindByEmailAsync: user (UserId - {user.Id}) the initiator (Email - {iniciator.Email}) does not have access to receive user data");
 
             var userRoleNames = await _userManager.GetRolesAsync(user);
             var userRoles = new List<IdentityRole>();
@@ -125,6 +199,9 @@ namespace ID.Core.Users
             var user = await _userManager.FindByIdAsync(userId)
                 ?? throw new UserNotFoundException($"FindByEmailAsync: user (UserId - {userId}) was not found");
 
+            if (await _userManager.IsInRoleAsync(user, IDConstants.Roles.RootAdmin) && !iniciator.IsInRole(IDConstants.Roles.RootAdmin))
+                throw new UserFindAccessException($"FindByEmailAsync: user (UserId - {user.Id}) the initiator (Email - {iniciator.Email}) does not have access to receive user data");
+
             var userRoleNames = await _userManager.GetRolesAsync(user);
             var userRoles = new List<IdentityRole>();
 
@@ -146,6 +223,9 @@ namespace ID.Core.Users
         {
             var user = await _userManager.FindByNameAsync(userName)
                 ?? throw new UserNotFoundException($"FindByEmailAsync: user (UserName - {userName}) was not found");
+
+            if (await _userManager.IsInRoleAsync(user, IDConstants.Roles.RootAdmin) && !iniciator.IsInRole(IDConstants.Roles.RootAdmin))
+                throw new UserFindAccessException($"FindByEmailAsync: user (UserId - {user.Id}) the initiator (Email - {iniciator.Email}) does not have access to receive user data");
 
             var userRoleNames = await _userManager.GetRolesAsync(user);
             var userRoles = new List<IdentityRole>();
@@ -192,7 +272,9 @@ namespace ID.Core.Users
 
                 var currentUserClaims = await _userManager.GetClaimsAsync(user);
 
-                usersInfo.Add(new UserInfo(user, userRoles, currentUserClaims));
+                if((userRoles.Any(x => x.Name == IDConstants.Roles.RootAdmin) && iniciator.IsInRole(IDConstants.Roles.RootAdmin)) ||
+                    !userRoles.Any(x => x.Name == IDConstants.Roles.RootAdmin))
+                    usersInfo.Add(new UserInfo(user, userRoles, currentUserClaims));
             }
 
             return usersInfo;
@@ -240,7 +322,9 @@ namespace ID.Core.Users
 
                 var currentUserClaims = await _userManager.GetClaimsAsync(user);
 
-                usersInfo.Add(new UserInfo(user, userRoles, currentUserClaims));
+                if ((userRoles.Any(x => x.Name == IDConstants.Roles.RootAdmin) && iniciator.IsInRole(IDConstants.Roles.RootAdmin)) ||
+                    !userRoles.Any(x => x.Name == IDConstants.Roles.RootAdmin))
+                    usersInfo.Add(new UserInfo(user, userRoles, currentUserClaims));
             }
 
             return usersInfo;
@@ -281,6 +365,53 @@ namespace ID.Core.Users
             var currentUserRoles = await _userManager.GetRolesAsync(currentUser);
             await _userManager.RemoveFromRolesAsync(currentUser, currentUserRoles);
             await _userManager.AddToRolesAsync(currentUser, data.RoleNames);
+        }
+        public virtual async Task SetLockStatusByVerifyCodeAsync(string userId, bool enabled, string confirmationCode, CancellationToken token = default)
+        {
+            var currentUser = await _userManager.FindByIdAsync(userId)
+                ?? throw new UserSetLockoutEnabledException($"SetLockoutEnabledAsync: user (UserId - {userId}) was not found");
+
+            var savedLockVerificationCode = await _userManager.GetAuthenticationTokenAsync
+                (currentUser,
+                 IDConstants.Users.ConfirmationCodeProviders.IDProvider,
+                 IDConstants.Users.ConfirmationCodeNames.CodeBySetLockoutEnabled);
+
+            if(savedLockVerificationCode == confirmationCode)
+            {
+                var setLockoutEnabledResult = await _userManager.SetLockoutEnabledAsync(currentUser, enabled);
+                if (!setLockoutEnabledResult.Succeeded)
+                    throw new UserSetLockoutEnabledException($"SetLockoutEnabledAsync: user (UserId - {currentUser.Id}) cannot be blocked. " +
+                        $"{string.Join(';', setLockoutEnabledResult.Errors.Select(x => $"{x.Code} - {x.Description}"))}");
+
+                var setLockedEndDateResult = await _userManager.SetLockoutEndDateAsync(currentUser, DateTimeOffset.UtcNow.Add(TimeSpan.FromHours(1)));
+                if (!setLockedEndDateResult.Succeeded)
+                    throw new UserSetLockoutEnabledException($"SetLockoutEnabledAsync: user (UserId - {currentUser.Id}) cannot be set locked end date. " +
+                        $"{string.Join(';', setLockedEndDateResult.Errors.Select(x => $"{x.Code} - {x.Description}"))}");
+            }
+        }
+        public virtual async Task<DateTimeOffset?> SetLockoutEnabledAsync(string userId, bool enabled, ISrvUser iniciator, CancellationToken token = default)
+        {
+            var currentUser = await _userManager.FindByIdAsync(userId)
+                ?? throw new UserSetLockoutEnabledException($"SetLockoutEnabledAsync: user (UserId - {userId}) was not found");
+
+            var setLockoutEnabledResult = await _userManager.SetLockoutEnabledAsync(currentUser, enabled);
+            if (!setLockoutEnabledResult.Succeeded)
+                throw new UserSetLockoutEnabledException($"SetLockoutEnabledAsync: user (UserId - {currentUser.Id}) cannot be blocked. " +
+                    $"{string.Join(';', setLockoutEnabledResult.Errors.Select(x => $"{x.Code} - {x.Description}"))}");
+
+            if(enabled)
+            {
+                var lockoutEndTime = DateTimeOffset.UtcNow.Add(TimeSpan.FromHours(1));
+
+                var setLockedEndDateResult = await _userManager.SetLockoutEndDateAsync(currentUser, lockoutEndTime);
+                if (!setLockedEndDateResult.Succeeded)
+                    throw new UserSetLockoutEnabledException($"SetLockoutEnabledAsync: user (UserId - {currentUser.Id}) cannot be set locked end date. " +
+                        $"{string.Join(';', setLockedEndDateResult.Errors.Select(x => $"{x.Code} - {x.Description}"))}");
+
+                return lockoutEndTime;
+            }
+
+            return null;
         }
     }
 }

@@ -26,6 +26,18 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Content Update="App_Data\Notify\Email\BaseVerificationCode.cshtml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Update="App_Data\Notify\Email\BasePasswordResetComplete.cshtml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Update="App_Data\Notify\Email\BaseUserChangedPassword.cshtml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Update="App_Data\Notify\Email\BaseConfirmResetPassword.cshtml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Update="App_Data\Notify\Email\BaseEmailConfirm.cshtml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
