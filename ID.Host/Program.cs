@@ -25,6 +25,7 @@ using IdentityModel;
 using IdentityServer4.AccessTokenValidation;
 using IdentityServer4.AspNetIdentity;
 using IdentityServer4.EntityFramework.DbContexts;
+using ISDS.ServiceExtender.Http.Extensions;
 using ISDS.ServiceExtender.Logging.Extensions;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -141,7 +142,9 @@ builder.Services.AddIdentity<UserID, IdentityRole>(config =>
 builder.Services.AddIdentityServer(options =>
 {
     options.UserInteraction.LoginUrl = "/Account/Login";
-    options.UserInteraction.LogoutUrl = "/Account/Logout";
+    options.Endpoints.EnableAuthorizeEndpoint = true;
+    options.UserInteraction.ErrorUrl = "/Account/Error";
+    options.UserInteraction.LogoutUrl = "/api/account/logout";
     options.Events.RaiseErrorEvents = true;
     options.Events.RaiseFailureEvents = true;
     options.Events.RaiseInformationEvents = true;
@@ -199,6 +202,24 @@ builder.Services.AddSwaggerGen(c =>
                                 {
                                     { IDConstants.ApiScopes.Default.Names.ServiceIDApiName, "ID API" }
                                 }
+            },
+            Implicit = new OpenApiOAuthFlow
+            {
+                TokenUrl = new Uri(AppSettings.ServiceAddresses?.IdentityUrl?.AbsoluteUri + "connect/token"),
+                AuthorizationUrl = new Uri(AppSettings.ServiceAddresses?.IdentityUrl?.AbsoluteUri + "connect/authorize"),
+                Scopes = new Dictionary<string, string>()
+                {
+                    { IDConstants.ApiScopes.Default.Names.ServiceIDApiName, "ID API" }
+                }
+            },
+            AuthorizationCode = new OpenApiOAuthFlow
+            {
+                TokenUrl = new Uri(AppSettings.ServiceAddresses?.IdentityUrl?.AbsoluteUri + "connect/token"),
+                AuthorizationUrl = new Uri(AppSettings.ServiceAddresses?.IdentityUrl?.AbsoluteUri + "connect/authorize"),
+                Scopes = new Dictionary<string, string>()
+                {
+                    { IDConstants.ApiScopes.Default.Names.ServiceIDApiName, "ID API" }
+                }
             }
         }
     });
@@ -261,6 +282,23 @@ builder.Services.AddAuthentication(IdentityServerAuthenticationDefaults.Authenti
                     };
                 });
 
+builder.Services.AddFileDeterminantService(ServiceLifetime.Transient, configure =>
+{
+    configure.ContentRootPath = Path.Combine(builder.Environment.ContentRootPath, "wwwroot");
+    configure.IgnoreQueryPrefixex = new[]
+    {
+        "api",
+        "connect",
+        "swagger",
+        ".well-known/openid-configuration"
+    };
+    configure.Modules.Add(new ISDS.ServiceExtender.Http.StaticFiles.Settings.QueryInfo
+    {
+        FolderName = "AuthorizationViews",
+        Host = "localhost:44338"
+    });
+});
+
 var app = builder.Build();
 
 await Task.Run(async () =>
@@ -270,6 +308,7 @@ await Task.Run(async () =>
 }).ConfigureAwait(false);
 
 app.UseMiddleware<ExceptionHandlerMiddleware>();
+app.UseModuleDeterminant();
 
 if (app.Environment.IsDevelopment())
 {
@@ -279,8 +318,8 @@ if (app.Environment.IsDevelopment())
            c.SwaggerEndpoint("/swagger/v1/swagger.json", "API - identity server");
            c.DocExpansion(Swashbuckle.AspNetCore.SwaggerUI.DocExpansion.None);
            c.DocumentTitle = "API - identity server";
-           c.OAuthClientId(IDConstants.Client.Default.Ids.ServiceIDApiId);
-           c.OAuthClientSecret(IDConstants.Client.Default.Secrets.ServiceIdApiSecret);
+           c.OAuthClientId(/*IDConstants.Client.Default.Ids.ServiceIDApiId*/"638d4e3c-d6d4-4e93-932f-5b4b704fc8bb");
+           c.OAuthClientSecret(/*IDConstants.Client.Default.Secrets.ServiceIdApiSecret*/"3FA3812834DC4151933F5866EC378CB2");
        });
 }
 

@@ -1,6 +1,8 @@
-﻿using ID.Core.Users.Abstractions;
+﻿using ID.Core.Clients.Abstractions;
+using ID.Core.Users.Abstractions;
 using ID.Core.Users.Default;
 using ID.Core.Users.Exceptions;
+using IdentityServer4.Models;
 using ISDS.ServiceExtender.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -13,15 +15,18 @@ namespace ID.Core.Users
         protected readonly IDUserManager _userManager;
         protected readonly RoleManager<IdentityRole> _roleManager;
         protected readonly IdentityOptions _identityOptions;
+        protected readonly IClientRepository _clientRepository;
 
         public UserService
             (IDUserManager userManager,
              RoleManager<IdentityRole> roleManager,
+             IClientRepository clientRepository,
              IOptions<IdentityOptions>? identityDescriptor = null)
         {
             _userManager = userManager ?? throw new ArgumentNullException(nameof(userManager));
             _roleManager = roleManager ?? throw new ArgumentNullException(nameof(roleManager));
             _identityOptions = identityDescriptor?.Value ?? new IdentityOptions();
+            _clientRepository = clientRepository ?? throw new ArgumentNullException(nameof(clientRepository));
         }
 
         public virtual async Task<CreateUserResult> AddAsync(CreateUserData data, ISrvUser iniciator, CancellationToken token = default)
@@ -76,21 +81,21 @@ namespace ID.Core.Users
                 throw new UserChangeEmailException($"ChangeEmailAsync: user (UserId - {currentUser.Id}, NewEmail - {newEmail}) the email address could not be changed. " +
                     $"{string.Join(';', setNewEmailResult.Errors.Select(x => $"{x.Code} - {x.Description}"))}");
         }
-        public virtual async Task<string> ResetPasswordAsync(string userId, ISrvUser iniciator, CancellationToken token = default)
+        public virtual async Task<string> ResetPasswordAsync(string email, string? clientId = null, CancellationToken token = default)
         {
-            var currentUser = await _userManager.FindByIdAsync(userId)
-                ?? throw new UserChangePasswordException($"ResetPasswordAsync: user (UserId - {userId}) was not found");
+            var currentUser = await _userManager.FindByEmailAsync(email)
+                ?? throw new UserChangePasswordException($"ResetPasswordAsync: user (Email - {email}) was not found");
 
             var newPassword = UserID.GeneratePassword(_identityOptions.Password.RequiredLength);
 
             var removeCurrentPasswordResult = await _userManager.RemovePasswordAsync(currentUser);
             if (!removeCurrentPasswordResult.Succeeded)
-                throw new UserChangePasswordException($"ResetPasswordAsync: user (UserId - {userId}) the current password could not be deleted. " +
+                throw new UserChangePasswordException($"ResetPasswordAsync: user (Email - {email}) the current password could not be deleted. " +
                     $"{string.Join(';', removeCurrentPasswordResult.Errors.Select(x => $"{x.Code} - {x.Description}"))}");
 
             var setNewPasswordResult = await _userManager.AddPasswordAsync(currentUser, newPassword);
             if (!setNewPasswordResult.Succeeded)
-                throw new UserChangePasswordException($"ResetPasswordAsync: user (UserId - {userId}) the new password could not be added. " +
+                throw new UserChangePasswordException($"ResetPasswordAsync: user (Email -  {email}) the new password could not be added. " +
                     $"{string.Join(';', setNewPasswordResult.Errors.Select(x => $"{x.Code} - {x.Description}"))}");
 
             return newPassword;
@@ -101,7 +106,7 @@ namespace ID.Core.Users
                 ?? throw new UserChangePhoneNumberException($"ChangePhoneNumberAsync: user (UserId - {userId}, NewPhoneNumber - {newPhoneNumber}) was not found");
 
             var changePhoneNumberResult = await _userManager.SetPhoneNumberAsync(currentUser, newPhoneNumber);
-            if(!changePhoneNumberResult.Succeeded)
+            if (!changePhoneNumberResult.Succeeded)
                 throw new UserChangePhoneNumberException($"ChangePhoneNumberAsync: user (UserId - {userId}) couldn't save a new phone number. " +
                     $"{string.Join(';', changePhoneNumberResult.Errors.Select(x => $"{x.Code} - {x.Description}"))}");
         }
@@ -125,6 +130,9 @@ namespace ID.Core.Users
             if (!verificationResult.Succeeded)
                 throw new UserEmailConfirmException($"ConfirmEmailAsync: user (UserId - {currentUser.Id}, NewEmail - {newEmail}) the email address could not be verified. " +
                     $"{string.Join(';', verificationResult.Errors.Select(x => $"{x.Code} - {x.Description}"))}");
+
+            if (currentUser.LockoutEnabled && !currentUser.LockoutEnd.HasValue)
+                await _userManager.SetLockoutEnabledAsync(currentUser, false);
         }
         public virtual async Task ConfirmPhoneNumberAsync(string userId, string newPhoneNumber, string base64ConfirmToken, CancellationToken token = default)
         {
@@ -136,7 +144,7 @@ namespace ID.Core.Users
                 throw new UserConfirmPhoneNumberException($"ConfirmPhoneNumberAsync: user (UserId - {currentUser.Id}, NewPhoneNumber - {newPhoneNumber}) the specified phone number and token are not valid. " +
                     $"{string.Join(';', verificationResult.Errors.Select(x => $"{x.Code} - {x.Description}"))}");
         }
-        public virtual async Task<string> ConfirmResetPasswordAsync(string userId, string base64ConfirmToken, string? clientId = null, CancellationToken token = default)
+        public virtual async Task<ResetPasswordConfirmResult> ConfirmResetPasswordAsync(string userId, string base64ConfirmToken, string? clientId = null, CancellationToken token = default)
         {
             var currentUser = await _userManager.FindByIdAsync(userId)
                 ?? throw new UserResetConfirmPasswordException($"ConfirmPasswordAsync: user (UserId - {userId}) was not found");
@@ -148,7 +156,11 @@ namespace ID.Core.Users
                 throw new UserResetConfirmPasswordException($"ConfirmPasswordAsync: user (UserId - {currentUser.Id}) the password could not be reset. " +
                     $"{string.Join(';', resetPasswordResult.Errors.Select(x => $"{x.Code} - {x.Description}"))}");
 
-            return newPassword;
+            Client? client = null;
+            if (!string.IsNullOrEmpty(clientId))
+                client = await _clientRepository.FindAsync(clientId, token);
+
+            return new ResetPasswordConfirmResult(newPassword, client);
         }
         public virtual async Task DeleteAsync(string userId, ISrvUser iniciator, CancellationToken token = default)
         {
@@ -180,12 +192,12 @@ namespace ID.Core.Users
             var userRoleNames = await _userManager.GetRolesAsync(user);
             var userRoles = new List<IdentityRole>();
 
-            if(userRoleNames.Any())
+            if (userRoleNames.Any())
             {
                 foreach (var roleName in userRoleNames)
                 {
                     var role = await _roleManager.FindByNameAsync(roleName);
-                    if(role != null)
+                    if (role != null)
                         userRoles.Add(role);
                 }
             }
@@ -272,7 +284,7 @@ namespace ID.Core.Users
 
                 var currentUserClaims = await _userManager.GetClaimsAsync(user);
 
-                if((userRoles.Any(x => x.Name == IDConstants.Roles.RootAdmin) && iniciator.IsInRole(IDConstants.Roles.RootAdmin)) ||
+                if ((userRoles.Any(x => x.Name == IDConstants.Roles.RootAdmin) && iniciator.IsInRole(IDConstants.Roles.RootAdmin)) ||
                     !userRoles.Any(x => x.Name == IDConstants.Roles.RootAdmin))
                     usersInfo.Add(new UserInfo(user, userRoles, currentUserClaims));
             }
@@ -288,7 +300,7 @@ namespace ID.Core.Users
             filter.Apply(ref query);
 
             var users = await query.ToListAsync(token);
-            
+
             if (!string.IsNullOrEmpty(filter.Role))
             {
                 var userInRole = new List<UserID>();
@@ -351,7 +363,7 @@ namespace ID.Core.Users
 
             var currentUserClaims = await _userManager.GetClaimsAsync(currentUser);
 
-            if(currentUserClaims.Count > 0)
+            if (currentUserClaims.Count > 0)
                 await _userManager.RemoveClaimsAsync(currentUser, currentUserClaims);
 
             await _userManager.AddClaimsAsync(currentUser, data.Claims);
@@ -376,7 +388,7 @@ namespace ID.Core.Users
                  IDConstants.Users.ConfirmationCodeProviders.IDProvider,
                  IDConstants.Users.ConfirmationCodeNames.CodeBySetLockoutEnabled);
 
-            if(savedLockVerificationCode == confirmationCode)
+            if (savedLockVerificationCode == confirmationCode)
             {
                 var setLockoutEnabledResult = await _userManager.SetLockoutEnabledAsync(currentUser, enabled);
                 if (!setLockoutEnabledResult.Succeeded)
@@ -399,7 +411,7 @@ namespace ID.Core.Users
                 throw new UserSetLockoutEnabledException($"SetLockoutEnabledAsync: user (UserId - {currentUser.Id}) cannot be blocked. " +
                     $"{string.Join(';', setLockoutEnabledResult.Errors.Select(x => $"{x.Code} - {x.Description}"))}");
 
-            if(enabled)
+            if (enabled)
             {
                 var lockoutEndTime = DateTimeOffset.UtcNow.Add(TimeSpan.FromHours(1));
 

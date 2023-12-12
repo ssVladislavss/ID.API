@@ -12,9 +12,9 @@ namespace ID.Core.Users.Abstractions
         Task<CreateUserResult> AddAsync(CreateUserData data, ISrvUser iniciator, CancellationToken token = default);
         Task ConfirmEmailAsync(string userId, string newEmail, string base64ConfirmToken, CancellationToken token = default);
         Task ConfirmPhoneNumberAsync(string userId, string newPhoneNumber, string base64ConfirmToken, CancellationToken token = default);
-        Task<string> ConfirmResetPasswordAsync(string userId, string base64ConfirmToken, string? clientId = null, CancellationToken token = default);
+        Task<ResetPasswordConfirmResult> ConfirmResetPasswordAsync(string userId, string base64ConfirmToken, string? clientId = null, CancellationToken token = default);
         Task SetEmailAsync(string userId, string newEmail, ISrvUser iniciator, CancellationToken token = default);
-        Task<string> ResetPasswordAsync(string userId, ISrvUser iniciator, CancellationToken token = default);
+        Task<string> ResetPasswordAsync(string email, string? clientId = null, CancellationToken token = default);
         Task ChangePasswordAsync(string userId, string currentPassword, string newPassword, ISrvUser iniciator, CancellationToken token = default);
         Task SetPhoneNumberAsync(string userId, string newPhoneNumber, CancellationToken token = default);
         Task UpdateAsync(EditUserData data, ISrvUser iniciator, CancellationToken token = default);

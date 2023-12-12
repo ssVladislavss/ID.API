@@ -23,7 +23,8 @@ namespace ID.Host.Infrastracture.Mapping.Profiles
                         Email = data.Email,
                         EmailConfirmed = false,
                         SecondName = data.SecondName,
-                        UserName = data.Email
+                        UserName = data.Email,
+                        LockoutEnabled = false
                     };
 
                     return new CreateUserData(createUser, data.RoleNames, data.Password, data.ClientId);

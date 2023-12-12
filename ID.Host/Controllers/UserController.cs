@@ -132,44 +132,11 @@ namespace ID.Host.Controllers
             return Ok(AjaxResult.Success());
         }
 
-        [HttpPut("{userId}/password/reset")]
-        [Authorize(AuthenticationSchemes = IdentityServerAuthenticationDefaults.AuthenticationScheme)]
-        public async Task<ActionResult<AjaxResult>> ResetPasswordAsync(string userId)
-        {
-            await _userService.ResetPasswordAsync(userId, SrvUser, CancellationToken);
-
-            return Ok(AjaxResult.Success());
-        }
-
         [HttpDelete("{userId}/remove")]
         [Authorize(AuthenticationSchemes = IdentityServerAuthenticationDefaults.AuthenticationScheme)]
         public async Task<ActionResult<AjaxResult>> DeleteAsync(string userId)
         {
             await _userService.DeleteAsync(userId, SrvUser, HttpContext.RequestAborted);
-
-            return Ok(AjaxResult.Success());
-        }
-
-        [HttpGet("confirmation/email")]
-        public async Task<ActionResult<AjaxResult>> ConfirmEmailAsync(string userId, string newEmail, string token)
-        {
-            await _userService.ConfirmEmailAsync(userId, newEmail, token, CancellationToken);
-
-            return Ok(AjaxResult.Success());
-        }
-
-        [HttpGet("confirmation/email/lock")]
-        public async Task<ActionResult<AjaxResult>> LockByClickInEmailMessageAsync(string userId, string code)
-        {
-            await _userService.SetLockStatusByVerifyCodeAsync(userId, true, code, CancellationToken);
-
-            return Ok(AjaxResult.Success());
-        }
-
-        [HttpGet("confirmation/password/reset")]
-        public async Task<ActionResult<AjaxResult>> ConformResetPasswordAsync(string userId, string? clientId, string token)
-        {
-            await _userService.ConfirmResetPasswordAsync(userId, token, clientId, CancellationToken);
 
             return Ok(AjaxResult.Success());
         }

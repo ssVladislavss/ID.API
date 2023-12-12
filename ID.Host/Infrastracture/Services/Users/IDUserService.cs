@@ -3,6 +3,7 @@ using EmailSending.Abstractions;
 using EmailSending.Models;
 using ID.Core;
 using ID.Core.Clients.Abstractions;
+using ID.Core.Clients.Default;
 using ID.Core.Users;
 using ID.Core.Users.Exceptions;
 using ID.Host.App_Data.Notify.Email.Models;
@@ -19,7 +20,6 @@ namespace ID.Host.Infrastracture.Services.Users
         protected readonly IEmailProvider _emailProvider;
         protected readonly IHtmlBuilder _htmlBuilder;
         protected readonly IWebHostEnvironment _webHostEnvironment;
-        protected readonly IClientRepository _clientRepository;
 
         public IDUserService
             (IDUserManager userManager,
@@ -29,12 +29,11 @@ namespace ID.Host.Infrastracture.Services.Users
              IWebHostEnvironment webHostEnvironment,
              IClientRepository clientRepository,
              IOptions<IdentityOptions>? identityDescriptor = null)
-             : base(userManager, roleManager, identityDescriptor)
+             : base(userManager, roleManager, clientRepository, identityDescriptor)
         {
             _emailProvider = emailProvider ?? throw new ArgumentNullException(nameof(emailProvider));
             _htmlBuilder = htmlBuilder ?? throw new ArgumentNullException(nameof(htmlBuilder));
             _webHostEnvironment = webHostEnvironment ?? throw new ArgumentNullException(nameof(webHostEnvironment));
-            _clientRepository = clientRepository ?? throw new ArgumentNullException(nameof(clientRepository));
 
             _emailProvider.OnError += _emailProvider_OnError;
         }
@@ -60,7 +59,7 @@ namespace ID.Host.Infrastracture.Services.Users
 
                         var body = await _htmlBuilder.SetHtmlPath(Path.Combine(_webHostEnvironment.ContentRootPath, "App_Data", "Notify", "Email", "BaseIDUserRegistration.cshtml"))
                                                      .SetHtmlObject(new CreatedUserHtmlData(addedResult.Password, AppSettings.ServiceAddresses?.IdentityUrl?.AbsoluteUri
-                                                            + $"api/user/confirmation/email" +
+                                                            + $"api/account/confirmation/email" +
                                                             $"?userId={addedResult.CreatedUser.Id}&newEmail={data.User.Email}&token={verificationToken}",
                                                             client))
                                                      .SetHtmlTemplateName($"verify_email:" + client.ClientName)
@@ -88,7 +87,7 @@ namespace ID.Host.Infrastracture.Services.Users
 
                         var body = await _htmlBuilder.SetHtmlPath(Path.Combine(_webHostEnvironment.ContentRootPath, "App_Data", "Notify", "Email", "BaseEmailConfirm.cshtml"))
                                                      .SetHtmlObject(new UserConfirmEmailHtmlData(currentUser.Email, AppSettings.ServiceAddresses?.IdentityUrl?.AbsoluteUri
-                                                        + $"api/user/confirmation/email" +
+                                                        + $"api/account/confirmation/email" +
                                                         $"?userId={userId}&newEmail={newEmail}&token={verificationToken}", client))
                                                      .SetHtmlTemplateName("verify_email:" + client.ClientName)
                                                      .BuildAsync();
@@ -102,27 +101,26 @@ namespace ID.Host.Infrastracture.Services.Users
         {
             await base.SetPhoneNumberAsync(userId, newPhoneNumber, token);
         }
-        public override async Task<string> ResetPasswordAsync(string userId, ISrvUser iniciator, CancellationToken token = default)
+        public override async Task<string> ResetPasswordAsync(string email, string? clientId = null, CancellationToken token = default)
         {
-            if (!string.IsNullOrEmpty(iniciator.ClientId))
+            var client = !string.IsNullOrEmpty(clientId)
+                ? await _clientRepository.FindAsync(clientId, token)
+                : DefaultClient.ServiceID;
+            if (client != null)
             {
-                var client = await _clientRepository.FindAsync(iniciator.ClientId, token);
-                if(client != null)
-                {
-                    var currentUser = await _userManager.FindByIdAsync(userId)
-                            ?? throw new UserChangePasswordException($"ResetPasswordAsync: user (UserId - {userId}) was not found");
+                var currentUser = await _userManager.FindByEmailAsync(email)
+                        ?? throw new UserChangePasswordException($"ResetPasswordAsync: user (Email -  {email}) was not found");
 
-                    var currentPasswordConfirmToken = await _userManager.GeneratePasswordResetTokenAsync(currentUser);
+                var currentPasswordConfirmToken = await _userManager.GeneratePasswordResetTokenAsync(currentUser);
 
-                    var body = await _htmlBuilder.SetHtmlPath(Path.Combine(_webHostEnvironment.ContentRootPath, "App_Data", "Notify", "Email", "BaseConfirmResetPassword.cshtml"))
-                                                 .SetHtmlObject(new UserConfirmResetPasswordHtmlData(currentUser.Email, AppSettings.ServiceAddresses?.IdentityUrl?.AbsoluteUri
-                                                    + $"api/user/confirmation/password/reset" +
-                                                    $"?userId={userId}&clientId={iniciator.ClientId}&token={currentPasswordConfirmToken}", client))
-                                                 .SetHtmlTemplateName("verify_reset_password:" + client.ClientName)
-                                                 .BuildAsync();
+                var body = await _htmlBuilder.SetHtmlPath(Path.Combine(_webHostEnvironment.ContentRootPath, "App_Data", "Notify", "Email", "BaseConfirmResetPassword.cshtml"))
+                                             .SetHtmlObject(new UserConfirmResetPasswordHtmlData(currentUser.Email, AppSettings.ServiceAddresses?.IdentityUrl?.AbsoluteUri
+                                                + $"api/account/confirmation/password/reset" +
+                                                $"?userId={currentUser.Id}&clientId={client.ClientId}&token={currentPasswordConfirmToken}", client))
+                                             .SetHtmlTemplateName("verify_reset_password:" + client.ClientName)
+                                             .BuildAsync();
 
-                    await _emailProvider.SendAsync(new EmailMessage(currentUser.Email, client.ClientName, body, $"Подтверждение сброса пароля"), token);
-                }
+                await _emailProvider.SendAsync(new EmailMessage(currentUser.Email, client.ClientName, body, $"Подтверждение сброса пароля"), token);
             }
 
             return string.Empty;
@@ -149,7 +147,7 @@ namespace ID.Host.Infrastracture.Services.Users
 
                         var body = await _htmlBuilder.SetHtmlPath(Path.Combine(_webHostEnvironment.ContentRootPath, "App_Data", "Notify", "Email", "BaseUserChangedPassword.cshtml"))
                                                      .SetHtmlObject(new UserChangedPasswordHtmlData(currentUser.Email, AppSettings.ServiceAddresses?.IdentityUrl?.AbsoluteUri
-                                                        + $"api/user/confirmation/email/lock" +
+                                                        + $"api/account/confirmation/email/lock" +
                                                         $"?userId={userId}&code={lockVerificationCode}", client))
                                                      .SetHtmlTemplateName("changed_password:" + client.ClientName)
                                                      .BuildAsync();
@@ -159,9 +157,9 @@ namespace ID.Host.Infrastracture.Services.Users
                 }
             }
         }
-        public override async Task<string> ConfirmResetPasswordAsync(string userId, string base64ConfirmToken, string? clientId = null, CancellationToken token = default)
+        public override async Task<ResetPasswordConfirmResult> ConfirmResetPasswordAsync(string userId, string base64ConfirmToken, string? clientId = null, CancellationToken token = default)
         {
-            var newPassword = await base.ConfirmResetPasswordAsync(userId, base64ConfirmToken, clientId, token);
+            var confirmResult = await base.ConfirmResetPasswordAsync(userId, base64ConfirmToken, clientId, token);
 
             Client? client = null;
 
@@ -172,14 +170,14 @@ namespace ID.Host.Infrastracture.Services.Users
             if(currentUser != null)
             {
                 var body = await _htmlBuilder.SetHtmlPath(Path.Combine(_webHostEnvironment.ContentRootPath, "App_Data", "Notify", "Email", "BasePasswordResetComplete.cshtml"))
-                                             .SetHtmlObject(new UserPasswordResetCompleteHtmlData(currentUser.Email, newPassword, client))
+                                             .SetHtmlObject(new UserPasswordResetCompleteHtmlData(currentUser.Email, confirmResult.NewPassword, client))
                                              .SetHtmlTemplateName("verify_reset_password_complete:" + client?.ClientName)
                                              .BuildAsync();
 
                 await _emailProvider.SendAsync(new EmailMessage(currentUser.Email, client?.ClientName ?? "ID", body, $"Пароль от учетной записи сброшен"), token);
             }
 
-            return newPassword;
+            return confirmResult;
         }
     }
 }
