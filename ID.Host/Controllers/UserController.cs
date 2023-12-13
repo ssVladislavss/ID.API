@@ -80,9 +80,9 @@ namespace ID.Host.Controllers
 
         [HttpGet("{userId}/code/send/email")]
         [Authorize(AuthenticationSchemes = IdentityServerAuthenticationDefaults.AuthenticationScheme)]
-        public async Task<ActionResult<AjaxResult>> SendCodeOnEmailAsync(string userId)
+        public async Task<ActionResult<AjaxResult>> SendVerifyCodeOnEmailAsync(string userId)
         {
-            await _verificationService.SendCodeOnEmailAsync(userId, SrvUser, CancellationToken);
+            await _verificationService.SendCodeOnEmailAsync(userId , SrvUser, CancellationToken);
 
             return Ok(AjaxResult.Success());
         }
@@ -123,11 +123,29 @@ namespace ID.Host.Controllers
             return Ok(AjaxResult.Success());
         }
 
-        [HttpPut("password/change")]
+        [HttpPut("change/password")]
         [Authorize(AuthenticationSchemes = IdentityServerAuthenticationDefaults.AuthenticationScheme)]
         public async Task<ActionResult<AjaxResult>> ChangePasswordAsync(ChangePasswordViewModel model)
         {
             await _userService.ChangePasswordAsync(model.UserId, model.CurrentPassword, model.NewPassword, SrvUser, CancellationToken);
+
+            return Ok(AjaxResult.Success());
+        }
+
+        [HttpPut("change/email")]
+        [Authorize(AuthenticationSchemes = IdentityServerAuthenticationDefaults.AuthenticationScheme)]
+        public async Task<ActionResult<AjaxResult>> ChangeEmailAsync(ChangeEmailViewModel model)
+        {
+            await _userService.SetEmailAsync(model.UserId, model.NewEmail, SrvUser, CancellationToken);
+
+            return Ok(AjaxResult.Success());
+        }
+
+        [HttpPut("change/phone")]
+        [Authorize(AuthenticationSchemes = IdentityServerAuthenticationDefaults.AuthenticationScheme)]
+        public async Task<ActionResult<AjaxResult>> ChangePhoneAsync(ChangePhoneNumberViewModel model)
+        {
+            await _userService.SetPhoneNumberAsync(model.UserId, model.PhoneNumber, SrvUser, CancellationToken);
 
             return Ok(AjaxResult.Success());
         }

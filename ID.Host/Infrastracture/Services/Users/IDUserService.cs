@@ -74,38 +74,51 @@ namespace ID.Host.Infrastracture.Services.Users
         }
         public override async Task SetEmailAsync(string userId, string newEmail, ISrvUser iniciator, CancellationToken token = default)
         {
-            if (!string.IsNullOrEmpty(iniciator.ClientId))
+            Client? client = !string.IsNullOrEmpty(iniciator.ClientId) && !string.IsNullOrWhiteSpace(iniciator.ClientId)
+                ? await _clientRepository.FindAsync(iniciator.ClientId, token)
+                : DefaultClient.ServiceID;
+
+            if (client != null)
             {
-                var client = await _clientRepository.FindAsync(iniciator.ClientId, token);
-
-                if (client != null)
+                var currentUser = await _userManager.FindByIdAsync(userId);
+                if (currentUser != null)
                 {
-                    var currentUser = await _userManager.FindByIdAsync(userId);
-                    if (currentUser != null)
-                    {
-                        var verificationToken = await _userManager.GenerateChangeEmailTokenAsync(currentUser, newEmail);
+                    var verificationToken = await _userManager.GenerateChangeEmailTokenAsync(currentUser, newEmail);
 
-                        var body = await _htmlBuilder.SetHtmlPath(Path.Combine(_webHostEnvironment.ContentRootPath, "App_Data", "Notify", "Email", "BaseEmailConfirm.cshtml"))
-                                                     .SetHtmlObject(new UserConfirmEmailHtmlData(currentUser.Email, AppSettings.ServiceAddresses?.IdentityUrl?.AbsoluteUri
-                                                        + $"api/account/confirmation/email" +
-                                                        $"?userId={userId}&newEmail={newEmail}&token={verificationToken}", client))
-                                                     .SetHtmlTemplateName("verify_email:" + client.ClientName)
-                                                     .BuildAsync();
+                    var body = await _htmlBuilder.SetHtmlPath(Path.Combine(_webHostEnvironment.ContentRootPath, "App_Data", "Notify", "Email", "BaseEmailConfirm.cshtml"))
+                                                 .SetHtmlObject(new UserConfirmEmailHtmlData(currentUser.Email, AppSettings.ServiceAddresses?.IdentityUrl?.AbsoluteUri
+                                                    + $"api/account/confirmation/email" +
+                                                    $"?userId={userId}&newEmail={newEmail}&token={verificationToken}", client))
+                                                 .SetHtmlTemplateName("verify_email:" + client.ClientName)
+                                                 .BuildAsync();
 
-                        await _emailProvider.SendAsync(new EmailMessage(newEmail, client.ClientName, body, $"Смена адреса электронной почты"), token);
-                    }
+                    await _emailProvider.SendAsync(new EmailMessage(newEmail, client.ClientName, body, $"Смена адреса электронной почты"), token);
                 }
             }
         }
-        public override async Task SetPhoneNumberAsync(string userId, string newPhoneNumber, CancellationToken token = default)
+        public override async Task SetPhoneNumberAsync(string userId, string newPhoneNumber, ISrvUser iniciator, CancellationToken token = default)
         {
-            await base.SetPhoneNumberAsync(userId, newPhoneNumber, token);
+            Client? client = !string.IsNullOrWhiteSpace(iniciator.ClientId) && !string.IsNullOrEmpty(iniciator.ClientId)
+                ? await _clientRepository.FindAsync(iniciator.ClientId, token)
+                : DefaultClient.ServiceID;
+
+            if(client != null)
+            {
+                var currentUser = await _userManager.FindByIdAsync(userId)
+                    ?? throw new UserNotFoundException($"SetPhoneNumberAsync: user (UserId - {userId}) was not found");
+
+                var confirmationToken = await _userManager.GenerateChangePhoneNumberTokenAsync(currentUser, newPhoneNumber);
+
+                // скоро будет отправка на sms
+                await Task.Delay(2000, token);
+            }
         }
         public override async Task<string> ResetPasswordAsync(string email, string? clientId = null, CancellationToken token = default)
         {
-            var client = !string.IsNullOrEmpty(clientId)
+            var client = !string.IsNullOrEmpty(clientId) && !string.IsNullOrWhiteSpace(clientId)
                 ? await _clientRepository.FindAsync(clientId, token)
                 : DefaultClient.ServiceID;
+
             if (client != null)
             {
                 var currentUser = await _userManager.FindByEmailAsync(email)
@@ -161,9 +174,9 @@ namespace ID.Host.Infrastracture.Services.Users
         {
             var confirmResult = await base.ConfirmResetPasswordAsync(userId, base64ConfirmToken, clientId, token);
 
-            Client? client = null;
+            Client? client = confirmResult.Client;
 
-            if(!string.IsNullOrEmpty(clientId))
+            if(client == null && !string.IsNullOrEmpty(clientId))
                 client = await _clientRepository.FindAsync(clientId, token);
 
             var currentUser = await _userManager.FindByIdAsync(userId);

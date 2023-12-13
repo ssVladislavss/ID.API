@@ -59,8 +59,7 @@ namespace ID.Data.EF.Repositories
                     _context.Entry(clientScopes).State = EntityState.Deleted;
 
                 foreach (var clientClaim in nowEntity.Claims)
-                    if(clientClaim.Type != IDConstants.Client.Claims.Types.ClientType)
-                        _context.Entry(clientClaim).State = EntityState.Deleted;
+                    _context.Entry(clientClaim).State = EntityState.Deleted;
 
                 foreach (var clientSecret in nowEntity.ClientSecrets)
                     _context.Entry(clientSecret).State = EntityState.Deleted;

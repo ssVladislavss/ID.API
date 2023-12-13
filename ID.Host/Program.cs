@@ -34,6 +34,7 @@ using Microsoft.OpenApi.Models;
 using RazorEngine.Configuration;
 using RazorEngine.Templating;
 using RazorEngine.Text;
+using System.IdentityModel.Tokens.Jwt;
 using System.Reflection;
 using System.Security.Claims;
 
@@ -191,17 +192,17 @@ builder.Services.AddSwaggerGen(c =>
             {
                 TokenUrl = new Uri(AppSettings.ServiceAddresses?.IdentityUrl?.AbsoluteUri + "connect/token"),
                 Scopes = new Dictionary<string, string>()
-                                {
-                                    { IDConstants.ApiScopes.Default.Names.ServiceIDApiName, "ID API" }
-                                }
+                {
+                    { IDConstants.ApiScopes.Default.Names.ServiceIDApiName, "ID API" }
+                }
             },
             Password = new OpenApiOAuthFlow
             {
                 TokenUrl = new Uri(AppSettings.ServiceAddresses?.IdentityUrl?.AbsoluteUri + "connect/token"),
                 Scopes = new Dictionary<string, string>()
-                                {
-                                    { IDConstants.ApiScopes.Default.Names.ServiceIDApiName, "ID API" }
-                                }
+                {
+                    { IDConstants.ApiScopes.Default.Names.ServiceIDApiName, "ID API" }
+                }
             },
             Implicit = new OpenApiOAuthFlow
             {
@@ -268,6 +269,24 @@ builder.Services.AddAuthentication(IdentityServerAuthenticationDefaults.Authenti
                             if (roles != null)
                                 if (roles.Any())
                                     claims.AddRange(roles.Select(x => new Claim(JwtClaimTypes.Role, x.Value, x.ValueType)));
+
+                            var token = new JwtSecurityTokenHandler().WriteToken(context.SecurityToken);
+
+                            if (!string.IsNullOrEmpty(token))
+                                claims.Add(new Claim("access_token", token));
+
+                            var sub = context.Principal?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                            if (!string.IsNullOrEmpty(sub))
+                                claims.Add(new Claim(JwtClaimTypes.Subject, sub));
+                            var email = context.Principal?.FindFirst(ClaimTypes.Email)?.Value;
+                            if (!string.IsNullOrEmpty(email))
+                                claims.Add(new Claim(JwtClaimTypes.Email, email));
+                            var surName = context.Principal?.FindFirst(ClaimTypes.Surname)?.Value;
+                            if (!string.IsNullOrEmpty(surName))
+                                claims.Add(new Claim(JwtClaimTypes.FamilyName, surName));
+                            var givenName = context.Principal?.FindFirst(ClaimTypes.GivenName)?.Value;
+                            if (!string.IsNullOrEmpty(givenName))
+                                claims.Add(new Claim(JwtClaimTypes.GivenName, givenName));
 
                             if (claims.Any())
                             {

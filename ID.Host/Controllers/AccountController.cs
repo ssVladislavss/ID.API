@@ -51,6 +51,14 @@ namespace ID.Host.Controllers
             return Redirect("/Account/Email/Confirmed");
         }
 
+        [HttpGet("confirmation/phone")]
+        public async Task<IActionResult> ConfirmPhoneAsync(string userId, string newPhoneNumber, string token)
+        {
+            await _userService.ConfirmPhoneNumberAsync(userId, newPhoneNumber, token, CancellationToken);
+
+            return Redirect("/Account/Phone/Confirmed");
+        }
+
         [HttpGet("confirmation/email/lock")]
         public async Task<IActionResult> LockByClickInEmailMessageAsync(string userId, string code)
         {
