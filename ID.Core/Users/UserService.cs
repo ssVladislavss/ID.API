@@ -12,13 +12,13 @@ namespace ID.Core.Users
 {
     public partial class UserService : IUserService
     {
-        protected readonly IDUserManager _userManager;
+        protected readonly UserManager<UserID> _userManager;
         protected readonly RoleManager<IdentityRole> _roleManager;
         protected readonly IdentityOptions _identityOptions;
         protected readonly IClientRepository _clientRepository;
 
         public UserService
-            (IDUserManager userManager,
+            (UserManager<UserID> userManager,
              RoleManager<IdentityRole> roleManager,
              IClientRepository clientRepository,
              IOptions<IdentityOptions>? identityDescriptor = null)

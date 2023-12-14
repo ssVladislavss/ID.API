@@ -11,11 +11,11 @@ namespace ID.Core.Clients.Default
         public static Client ServiceID
             => new()
             {
-                ClientName = IDConstants.Client.Default.Names.ServiceIdApiName,
+                ClientName = IDConstants.Client.Default.Names.ServiceIdApi,
                 Enabled = true,
                 Claims = {
                     new(IDConstants.Client.Claims.Types.ClientType, IDConstants.Client.Claims.Values.Base),
-                    new(IDConstants.Client.Claims.Types.ClientName, IDConstants.Client.Default.Names.ServiceIdApiName)
+                    new(IDConstants.Client.Claims.Types.ClientName, IDConstants.Client.Default.Names.ServiceIdApi)
                 },
 
                 ClientId = IDConstants.Client.Default.Ids.ServiceIDApiId,
@@ -43,11 +43,11 @@ namespace ID.Core.Clients.Default
         public static Client ServiceIDUI
             => new()
             {
-                ClientName = IDConstants.Client.Default.Names.ServiceIdUIName,
+                ClientName = IDConstants.Client.Default.Names.ServiceIdAdministrationUI,
                 Enabled = true,
                 Claims = {
                     new(IDConstants.Client.Claims.Types.ClientType, IDConstants.Client.Claims.Values.Base),
-                    new(IDConstants.Client.Claims.Types.ClientName, IDConstants.Client.Default.Names.ServiceIdUIName)
+                    new(IDConstants.Client.Claims.Types.ClientName, IDConstants.Client.Default.Names.ServiceIdAdministrationUI)
                 },
 
                 ClientId = IDConstants.Client.Default.Ids.ServiceIDUIId,

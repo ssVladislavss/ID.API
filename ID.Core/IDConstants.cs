@@ -13,8 +13,8 @@
                 }
                 public static class Names
                 {
-                    public const string ServiceIdApiName = "Service ID API";
-                    public const string ServiceIdUIName = "Service UI API";
+                    public const string ServiceIdApi = "Service ID API";
+                    public const string ServiceIdAdministrationUI = "Service ID Administration UI";
                 }
                 public static class Secrets
                 {
@@ -43,7 +43,7 @@
                 public static class Names
                 {
                     public const string ServiceIDApiName = "service_id_api";
-                    public const string ServiceIDUIName = "service_id_ui";
+                    public const string ServiceIDUIName = "service_id_administration_ui";
                 }
             }
         }
@@ -54,7 +54,7 @@
                 public static class Names
                 {
                     public const string ServiceIDApiName = "service_id_api";
-                    public const string ServiceIDUIName = "service_id_ui";
+                    public const string ServiceIDUIName = "service_id_administration_ui";
                 }
                 public static class Secrets
                 {

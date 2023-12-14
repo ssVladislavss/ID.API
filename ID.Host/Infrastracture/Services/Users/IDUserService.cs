@@ -35,10 +35,10 @@ namespace ID.Host.Infrastracture.Services.Users
             _htmlBuilder = htmlBuilder ?? throw new ArgumentNullException(nameof(htmlBuilder));
             _webHostEnvironment = webHostEnvironment ?? throw new ArgumentNullException(nameof(webHostEnvironment));
 
-            _emailProvider.OnError += _emailProvider_OnError;
+            _emailProvider.OnError += EmailProvider_OnError;
         }
 
-        private void _emailProvider_OnError(object sender, EmailSending.Events.SendEmailEventArgs args)
+        private void EmailProvider_OnError(object sender, EmailSending.Events.SendEmailEventArgs args)
         {
             if (args.Exception != null)
                 throw new UserEmailNotifyDeliveredException($"Email notify: (Data - {args.SendingMessage}) the message could not be delivered", args.Exception);
