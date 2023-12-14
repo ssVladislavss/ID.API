@@ -20,7 +20,10 @@ namespace ID.Core.Users
 
             var nowUser = await userManager.FindByIdAsync(user.Id);
             if (nowUser == null)
+            {
                 await userManager.CreateAsync(user, DefaultUserID.DefaultPassword);
+                await userManager.SetLockoutEnabledAsync(user, false);
+            }
             else
                 user = nowUser;
 

@@ -337,8 +337,8 @@ if (app.Environment.IsDevelopment())
            c.SwaggerEndpoint("/swagger/v1/swagger.json", "API - identity server");
            c.DocExpansion(Swashbuckle.AspNetCore.SwaggerUI.DocExpansion.None);
            c.DocumentTitle = "API - identity server";
-           c.OAuthClientId(/*IDConstants.Client.Default.Ids.ServiceIDApiId*/"638d4e3c-d6d4-4e93-932f-5b4b704fc8bb");
-           c.OAuthClientSecret(/*IDConstants.Client.Default.Secrets.ServiceIdApiSecret*/"3FA3812834DC4151933F5866EC378CB2");
+           c.OAuthClientId(IDConstants.Client.Default.Ids.ServiceIDApiId);
+           c.OAuthClientSecret(IDConstants.Client.Default.Secrets.ServiceIdApiSecret);
        });
 }
 
