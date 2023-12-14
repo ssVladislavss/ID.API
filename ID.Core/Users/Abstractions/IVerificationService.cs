@@ -6,6 +6,6 @@ namespace ID.Core.Users.Abstractions
     {
         Task SendCodeOnEmailAsync(string userId, ISrvUser iniciator, CancellationToken token = default);
         Task SendCodeOnSmsAsync(string userId, ISrvUser iniciator, CancellationToken token = default);
-        Task VerifyCodeAsync(string userId, string currentCode, CancellationToken token = default);
+        Task VerifyCodeAsync(string userId, string currentCode, ISrvUser iniciator, CancellationToken token = default);
     }
 }

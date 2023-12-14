@@ -2,10 +2,13 @@
 using ID.Core.Users.Abstractions;
 using ID.Host.Infrastracture;
 using ID.Host.Infrastracture.Models.Account;
+using ID.Host.Infrastracture.Models.Users;
 using IdentityServer4;
+using IdentityServer4.AccessTokenValidation;
 using IdentityServer4.Services;
 using ISDS.ServiceExtender.Http;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
@@ -20,17 +23,20 @@ namespace ID.Host.Controllers
         private readonly IDUserManager _manager;
         private readonly IIdentityServerInteractionService _interactionService;
         private readonly IUserService _userService;
+        private readonly IVerificationService _verificationService;
 
         public AccountController
             (SignInManager<UserID> signInManager,
              IDUserManager manager,
              IIdentityServerInteractionService interactionService,
-             IUserService userService)
+             IUserService userService,
+             IVerificationService verificationService)
         {
             _signInManager = signInManager ?? throw new ArgumentNullException(nameof(signInManager));
             _manager = manager ?? throw new ArgumentNullException(nameof(manager));
             _interactionService = interactionService ?? throw new ArgumentNullException(nameof(interactionService));
             _userService = userService ?? throw new ArgumentNullException(nameof(userService));
+            _verificationService = verificationService ?? throw new ArgumentNullException(nameof(verificationService));
         }
 
         [HttpGet("logout")]
@@ -75,6 +81,24 @@ namespace ID.Host.Controllers
             return Redirect("/Account/Password/Reset/Confirmed");
         }
 
+        [HttpGet("{userId}/code/send/email")]
+        [Authorize(AuthenticationSchemes = IdentityServerAuthenticationDefaults.AuthenticationScheme)]
+        public async Task<ActionResult<AjaxResult>> SendVerifyCodeOnEmailAsync(string userId)
+        {
+            await _verificationService.SendCodeOnEmailAsync(userId, SrvUser, CancellationToken);
+
+            return Ok(AjaxResult.Success());
+        }
+
+        [HttpGet("{userId}/code/send/sms")]
+        [Authorize(AuthenticationSchemes = IdentityServerAuthenticationDefaults.AuthenticationScheme)]
+        public async Task<ActionResult<AjaxResult>> SendVerifyCodeOnSmsAsync(string userId)
+        {
+            await _verificationService.SendCodeOnSmsAsync(userId, SrvUser, CancellationToken);
+
+            return Ok(AjaxResult.Success());
+        }
+
         [HttpPost("login")]
         public async Task<IActionResult> LoginAsync(LoginViewModel model)
         {
@@ -98,10 +122,46 @@ namespace ID.Host.Controllers
             return Ok(model.ReturnUrl);
         }
 
+        [HttpPost("code/verify")]
+        [Authorize(AuthenticationSchemes = IdentityServerAuthenticationDefaults.AuthenticationScheme)]
+        public async Task<ActionResult<AjaxResult>> VerifyCodeAsync(VerifyUserCodeViewModel model)
+        {
+            await _verificationService.VerifyCodeAsync(model.UserId, model.Code, SrvUser, CancellationToken);
+
+            return Ok(AjaxResult.Success());
+        }
+
         [HttpPut("{email}/password/reset")]
         public async Task<ActionResult<AjaxResult>> ResetPasswordAsync(string email, string? clientId)
         {
             await _userService.ResetPasswordAsync(email, clientId, CancellationToken);
+
+            return Ok(AjaxResult.Success());
+        }
+
+        [HttpPut("change/password")]
+        [Authorize(AuthenticationSchemes = IdentityServerAuthenticationDefaults.AuthenticationScheme)]
+        public async Task<ActionResult<AjaxResult>> ChangePasswordAsync(ChangePasswordViewModel model)
+        {
+            await _userService.ChangePasswordAsync(model.UserId, model.CurrentPassword, model.NewPassword, SrvUser, CancellationToken);
+
+            return Ok(AjaxResult.Success());
+        }
+
+        [HttpPut("change/email")]
+        [Authorize(AuthenticationSchemes = IdentityServerAuthenticationDefaults.AuthenticationScheme)]
+        public async Task<ActionResult<AjaxResult>> ChangeEmailAsync(ChangeEmailViewModel model)
+        {
+            await _userService.SetEmailAsync(model.UserId, model.NewEmail, SrvUser, CancellationToken);
+
+            return Ok(AjaxResult.Success());
+        }
+
+        [HttpPut("change/phone")]
+        [Authorize(AuthenticationSchemes = IdentityServerAuthenticationDefaults.AuthenticationScheme)]
+        public async Task<ActionResult<AjaxResult>> ChangePhoneAsync(ChangePhoneNumberViewModel model)
+        {
+            await _userService.SetPhoneNumberAsync(model.UserId, model.PhoneNumber, SrvUser, CancellationToken);
 
             return Ok(AjaxResult.Success());
         }

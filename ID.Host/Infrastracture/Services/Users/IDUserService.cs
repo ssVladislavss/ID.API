@@ -155,7 +155,7 @@ namespace ID.Host.Infrastracture.Services.Users
                         await _userManager.SetAuthenticationTokenAsync
                             (currentUser,
                              IDConstants.Users.ConfirmationCodeProviders.IDProvider,
-                             IDConstants.Users.ConfirmationCodeNames.CodeBySetLockoutEnabled,
+                             IDConstants.Users.CodeNames.CodeBySetLockoutEnabled,
                              lockVerificationCode);
 
                         var body = await _htmlBuilder.SetHtmlPath(Path.Combine(_webHostEnvironment.ContentRootPath, "App_Data", "Notify", "Email", "BaseUserChangedPassword.cshtml"))

@@ -1,5 +1,4 @@
-﻿using ID.Core;
-using ID.Core.Users;
+﻿using ID.Core.Users;
 using ID.Core.Users.Abstractions;
 using ID.Host.Infrastracture;
 using ID.Host.Infrastracture.Mapping;
@@ -16,12 +15,10 @@ namespace ID.Host.Controllers
     public class UserController : BaseController<RequestIniciator>
     {
         private readonly IUserService _userService;
-        private readonly IVerificationService _verificationService;
 
-        public UserController(IUserService userService, IVerificationService verificationService)
+        public UserController(IUserService userService)
         {
             _userService = userService ?? throw new ArgumentNullException(nameof(userService));
-            _verificationService = verificationService ?? throw new ArgumentNullException(nameof(verificationService));
         }
 
         [HttpGet("")]
@@ -78,15 +75,6 @@ namespace ID.Host.Controllers
             return Ok(AjaxResult<UserViewModel>.Success(new UserViewModel(userInfo)));
         }
 
-        [HttpGet("{userId}/code/send/email")]
-        [Authorize(AuthenticationSchemes = IdentityServerAuthenticationDefaults.AuthenticationScheme)]
-        public async Task<ActionResult<AjaxResult>> SendVerifyCodeOnEmailAsync(string userId)
-        {
-            await _verificationService.SendCodeOnEmailAsync(userId , SrvUser, CancellationToken);
-
-            return Ok(AjaxResult.Success());
-        }
-
         [HttpPost("create")]
         [Authorize(AuthenticationSchemes = IdentityServerAuthenticationDefaults.AuthenticationScheme)]
         public async Task<ActionResult<AjaxResult<CreateUserResultViewModel>>> CreateAsync(CreateUserViewModel model)
@@ -94,15 +82,6 @@ namespace ID.Host.Controllers
             var createdResult = await _userService.AddAsync(model.ToModel(), SrvUser, HttpContext.RequestAborted);
 
             return Ok(AjaxResult<CreateUserResultViewModel>.Success(new CreateUserResultViewModel(createdResult)));
-        }
-
-        [HttpPost("code/verify")]
-        [Authorize(AuthenticationSchemes = IdentityServerAuthenticationDefaults.AuthenticationScheme)]
-        public async Task<ActionResult<AjaxResult>> VerifyCodeAsync(VerifyUserCodeViewModel model)
-        {
-            await _verificationService.VerifyCodeAsync(model.UserId, model.Code, CancellationToken);
-
-            return Ok(AjaxResult.Success());
         }
 
         [HttpPut("set/lockout")]
@@ -119,33 +98,6 @@ namespace ID.Host.Controllers
         public async Task<ActionResult<AjaxResult>> UpdateAsync(EditUserViewModel model)
         {
             await _userService.UpdateAsync(model.ToModel(), SrvUser, HttpContext.RequestAborted);
-
-            return Ok(AjaxResult.Success());
-        }
-
-        [HttpPut("change/password")]
-        [Authorize(AuthenticationSchemes = IdentityServerAuthenticationDefaults.AuthenticationScheme)]
-        public async Task<ActionResult<AjaxResult>> ChangePasswordAsync(ChangePasswordViewModel model)
-        {
-            await _userService.ChangePasswordAsync(model.UserId, model.CurrentPassword, model.NewPassword, SrvUser, CancellationToken);
-
-            return Ok(AjaxResult.Success());
-        }
-
-        [HttpPut("change/email")]
-        [Authorize(AuthenticationSchemes = IdentityServerAuthenticationDefaults.AuthenticationScheme)]
-        public async Task<ActionResult<AjaxResult>> ChangeEmailAsync(ChangeEmailViewModel model)
-        {
-            await _userService.SetEmailAsync(model.UserId, model.NewEmail, SrvUser, CancellationToken);
-
-            return Ok(AjaxResult.Success());
-        }
-
-        [HttpPut("change/phone")]
-        [Authorize(AuthenticationSchemes = IdentityServerAuthenticationDefaults.AuthenticationScheme)]
-        public async Task<ActionResult<AjaxResult>> ChangePhoneAsync(ChangePhoneNumberViewModel model)
-        {
-            await _userService.SetPhoneNumberAsync(model.UserId, model.PhoneNumber, SrvUser, CancellationToken);
 
             return Ok(AjaxResult.Success());
         }

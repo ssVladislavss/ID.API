@@ -386,7 +386,7 @@ namespace ID.Core.Users
             var savedLockVerificationCode = await _userManager.GetAuthenticationTokenAsync
                 (currentUser,
                  IDConstants.Users.ConfirmationCodeProviders.IDProvider,
-                 IDConstants.Users.ConfirmationCodeNames.CodeBySetLockoutEnabled);
+                 IDConstants.Users.CodeNames.CodeBySetLockoutEnabled);
 
             if (savedLockVerificationCode == confirmationCode)
             {

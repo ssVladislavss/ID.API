@@ -86,9 +86,9 @@
             {
                 public const string IDProvider = "identity_server";
             }
-            public static class ConfirmationCodeNames
+            public static class CodeNames
             {
-                public const string BaseCode = "confirmation_code";
+                public const string ConfirmationCode = "confirmation_code";
                 public const string CodeBySetLockoutEnabled = "confirmation_code_to_lock";
             }
         }
