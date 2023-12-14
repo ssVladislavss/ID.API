@@ -38,10 +38,12 @@ namespace ID.Host.Infrastracture.Services.Users
             _emailProvider.OnError += _emailProvider_OnError;
         }
 
-        private void _emailProvider_OnError(EmailMessage errorSendingMessage, Exception? exception = null)
+        private void _emailProvider_OnError(object sender, EmailSending.Events.SendEmailEventArgs args)
         {
-            if (exception != null)
-                throw new UserEmailNotifyDeliveredException($"Email notify: (Data - {errorSendingMessage}) the message could not be delivered", exception);
+            if (args.Exception != null)
+                throw new UserEmailNotifyDeliveredException($"Email notify: (Data - {args.SendingMessage}) the message could not be delivered", args.Exception);
+            else
+                throw new UserEmailNotifyDeliveredException($"Email notify: (Data - {args.SendingMessage}) the message could not be delivered");
         }
 
         public virtual async Task SendCodeOnEmailAsync(string userId, ISrvUser iniciator, CancellationToken token = default)
