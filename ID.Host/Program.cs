@@ -34,6 +34,10 @@ using Microsoft.OpenApi.Models;
 using RazorEngine.Configuration;
 using RazorEngine.Templating;
 using RazorEngine.Text;
+using ServiceExtender.Sms;
+using ServiceExtender.Sms.Abstractions;
+using ServiceExtender.Sms.Devino;
+using ServiceExtender.Sms.QuickTel;
 using System.IdentityModel.Tokens.Jwt;
 using System.Reflection;
 using System.Security.Claims;
@@ -89,6 +93,20 @@ builder.Services.AddScoped<IEmailProvider, EmailProvider>();
 builder.Services.Configure<SmtpOptions>(options =>
 {
     builder.Configuration.GetSection("smtpOptions").Bind(options);
+});
+
+builder.Services.AddScoped<ISmsProviderFactory, SmsProviderFactory>();
+builder.Services.AddScoped<DevinoProvider>();
+builder.Services.Configure<DevinoOptions>(options =>
+{
+    options.AlwaysUseDefaultSender = true;
+    options.DefaultSender = "testIdentity";
+});
+builder.Services.AddScoped<QuickTelecomProvider>();
+builder.Services.Configure<QuickTelecomOptions>(options =>
+{
+    options.DefaultSender = "testIdentity";
+    options.AlwaysUseDefaultSender = true;
 });
 
 TemplateServiceConfiguration configurationTemplate = new()

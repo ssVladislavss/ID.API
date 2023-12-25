@@ -11,6 +11,8 @@ using ID.Host.App_Data.Notify.Email.Models;
 using ID.Host.Infrastracture.Services.Users.Exceptions;
 using IdentityServer4.Models;
 using ISDS.ServiceExtender.Http;
+using ServiceExtender.Sms.Abstractions;
+using ServiceExtender.Sms.Models;
 
 namespace ID.Host.Infrastracture.Services.Users
 {
@@ -21,13 +23,15 @@ namespace ID.Host.Infrastracture.Services.Users
         protected readonly IEmailProvider _emailProvider;
         protected readonly IClientRepository _clientRepository;
         protected readonly IWebHostEnvironment _webHostEnvironment;
+        protected readonly ISmsProviderFactory _smsProviderFactory;
 
         public IDUserVerificationCodeService
             (IDUserManager userManager,
              IHtmlBuilder htmlBuilder,
              IEmailProvider emailProvider,
              IClientRepository clientRepository,
-             IWebHostEnvironment webHostEnvironment)
+             IWebHostEnvironment webHostEnvironment,
+             ISmsProviderFactory smsProviderFactory)
         {
             _userManager = userManager ?? throw new ArgumentNullException(nameof(userManager));
             _htmlBuilder = htmlBuilder ?? throw new ArgumentNullException(nameof(htmlBuilder));
@@ -36,6 +40,7 @@ namespace ID.Host.Infrastracture.Services.Users
             _webHostEnvironment = webHostEnvironment ?? throw new ArgumentNullException(nameof(webHostEnvironment));
 
             _emailProvider.OnError += EmailProvider_OnError;
+            _smsProviderFactory = smsProviderFactory ?? throw new ArgumentNullException(nameof(smsProviderFactory));
         }
 
         private void EmailProvider_OnError(object sender, EmailSending.Events.SendEmailEventArgs args)
@@ -81,7 +86,36 @@ namespace ID.Host.Infrastracture.Services.Users
 
         public virtual async Task SendCodeOnSmsAsync(string userId, ISrvUser iniciator, CancellationToken token = default)
         {
-            await Task.CompletedTask;
+            var currentUser = await _userManager.FindByIdAsync(userId)
+                ?? throw new UserNotFoundException($"SendCodeOnSmsAsync: user (UserId - {userId}) was not found");
+
+            var existSavedVerificationCode = await _userManager.GetAuthenticationTokenAsync
+                (currentUser, IDConstants.Users.ConfirmationCodeProviders.IDProvider, IDConstants.Users.CodeNames.ConfirmationCode);
+
+            if (!string.IsNullOrEmpty(existSavedVerificationCode))
+                await _userManager.RemoveAuthenticationTokenAsync
+                      (currentUser, IDConstants.Users.ConfirmationCodeProviders.IDProvider, IDConstants.Users.CodeNames.ConfirmationCode);
+
+            var currentCode = currentUser.GenerateCode(4);
+            var validTo = DateTimeOffset.UtcNow.AddMinutes(30).ToString();
+
+            var saveCodeResult = await _userManager.SetAuthenticationTokenAsync
+                (currentUser, IDConstants.Users.ConfirmationCodeProviders.IDProvider, IDConstants.Users.CodeNames.ConfirmationCode, $"{currentCode}|{validTo}");
+            if (!saveCodeResult.Succeeded)
+                throw new UserCodeAddException
+                    ($"SendCodeOnEmailAsync: user (UserId - {currentUser.Id}, Code - {currentCode}) the generated confirmation code could not be saved. " +
+                    $"{string.Join(';', saveCodeResult.Errors.Select(x => $"{x.Code} - {x.Description}"))}");
+
+            Client? client = !string.IsNullOrEmpty(iniciator.ClientId) && !string.IsNullOrWhiteSpace(iniciator.ClientId)
+                ? await _clientRepository.FindAsync(iniciator.ClientId, token)
+                : DefaultClient.ServiceID;
+
+            var smsProvider = _smsProviderFactory.Create(SmsProviderType.QuikTelecom);
+
+            await smsProvider.SendAsync
+                (new SmsSendingMessage($"Ваш код подтверждения: {currentCode}", "79251066154"),
+                 new SmsRequestIdentity("test", "12Qwaszx"),
+                 new SmsRequestSettings("default", true));
         }
 
         public virtual async Task VerifyCodeAsync(string userId, string currentCode, ISrvUser iniciator, CancellationToken token = default)

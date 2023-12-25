@@ -12,6 +12,8 @@ using IdentityServer4.Models;
 using ISDS.ServiceExtender.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Options;
+using ServiceExtender.Sms.Abstractions;
+using ServiceExtender.Sms.Models;
 
 namespace ID.Host.Infrastracture.Services.Users
 {
@@ -20,6 +22,7 @@ namespace ID.Host.Infrastracture.Services.Users
         protected readonly IEmailProvider _emailProvider;
         protected readonly IHtmlBuilder _htmlBuilder;
         protected readonly IWebHostEnvironment _webHostEnvironment;
+        protected readonly ISmsProviderFactory _smsProviderFactory;
 
         public IDUserService
             (IDUserManager userManager,
@@ -28,6 +31,7 @@ namespace ID.Host.Infrastracture.Services.Users
              IHtmlBuilder htmlBuilder,
              IWebHostEnvironment webHostEnvironment,
              IClientRepository clientRepository,
+             ISmsProviderFactory smsProviderFactory,
              IOptions<IdentityOptions>? identityDescriptor = null)
              : base(userManager, roleManager, clientRepository, identityDescriptor)
         {
@@ -36,6 +40,7 @@ namespace ID.Host.Infrastracture.Services.Users
             _webHostEnvironment = webHostEnvironment ?? throw new ArgumentNullException(nameof(webHostEnvironment));
 
             _emailProvider.OnError += EmailProvider_OnError;
+            _smsProviderFactory = smsProviderFactory ?? throw new ArgumentNullException(nameof(smsProviderFactory));
         }
 
         private void EmailProvider_OnError(object sender, EmailSending.Events.SendEmailEventArgs args)
@@ -112,7 +117,12 @@ namespace ID.Host.Infrastracture.Services.Users
                 var confirmationToken = await _userManager.GenerateChangePhoneNumberTokenAsync(currentUser, newPhoneNumber);
 
                 // скоро будет отправка на sms
-                await Task.Delay(2000, token);
+
+                var smsProvider = _smsProviderFactory.Create(SmsProviderType.Devino);
+
+                await smsProvider.SendAsync(new SmsSendingMessage($"Ваш код подтверждения: {confirmationToken}", newPhoneNumber),
+                                            new SmsRequestIdentity("test", "12Qwaszx"),
+                                            new SmsRequestSettings("testChangePhone", false));
             }
         }
         public override async Task<string> ResetPasswordAsync(string email, string? clientId = null, CancellationToken token = default)

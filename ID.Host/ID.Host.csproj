@@ -180,6 +180,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\..\..\..\Common\ServiceExtender.Sms\ServiceExtender.Sms\ServiceExtender.Sms.csproj" />
     <ProjectReference Include="..\..\..\Notify\Notify.Builders\Builder.Messages.Html\Builder.Messages.Html.csproj" />
     <ProjectReference Include="..\..\..\Notify\Notify.Email\EmailSending\EmailSending.csproj" />
     <ProjectReference Include="..\ID.Core\ID.Core.csproj" />
