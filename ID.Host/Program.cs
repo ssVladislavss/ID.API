@@ -39,9 +39,11 @@ using ServiceExtender.Sms.Abstractions;
 using ServiceExtender.Sms.Devino;
 using ServiceExtender.Sms.QuickTel;
 using ServiceExtender.Sms.RedSms;
+using ServiceExtender.Sms.Smsc;
 using System.IdentityModel.Tokens.Jwt;
 using System.Reflection;
 using System.Security.Claims;
+using ServiceExtender.Sms.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -96,23 +98,15 @@ builder.Services.Configure<SmtpOptions>(options =>
     builder.Configuration.GetSection("smtpOptions").Bind(options);
 });
 
-builder.Services.AddScoped<ISmsProviderFactory, SmsProviderFactory>();
-builder.Services.AddScoped<DevinoProvider>();
-builder.Services.Configure<DevinoOptions>(options =>
+builder.Services.ConfigureSmsProviders((services, config) =>
 {
-    options.AlwaysUseDefaultSender = true;
-    options.DefaultSender = "testIdentity";
-});
-builder.Services.AddScoped<QuickTelecomProvider>();
-builder.Services.Configure<QuickTelecomOptions>(options =>
-{
-    options.DefaultSender = "testIdentity";
-    options.AlwaysUseDefaultSender = true;
-});
-builder.Services.AddScoped<RedSmsProvider>();
-builder.Services.Configure<RedSmsOptions>(options =>
-{
-    
+    config.AddDefaultSmsProviderFactory()
+          .AddDefaultDevinoProvider()
+          .AddDefaultMegafonProvider()
+          .AddDefaultQuikTelecomProvider()
+          .AddDefaultRedSmsProvider()
+          .AddDefaultSendPulseProvider()
+          .AddDefaultSmscProvider();
 });
 
 TemplateServiceConfiguration configurationTemplate = new()

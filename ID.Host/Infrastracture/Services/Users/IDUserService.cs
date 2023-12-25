@@ -23,6 +23,7 @@ namespace ID.Host.Infrastracture.Services.Users
         protected readonly IHtmlBuilder _htmlBuilder;
         protected readonly IWebHostEnvironment _webHostEnvironment;
         protected readonly ISmsProviderFactory _smsProviderFactory;
+        protected readonly ISmsProvider _smsProvider;
 
         public IDUserService
             (IDUserManager userManager,
@@ -41,6 +42,16 @@ namespace ID.Host.Infrastracture.Services.Users
 
             _emailProvider.OnError += EmailProvider_OnError;
             _smsProviderFactory = smsProviderFactory ?? throw new ArgumentNullException(nameof(smsProviderFactory));
+            _smsProvider = smsProviderFactory.Create(SmsProviderType.RedSms);
+            _smsProvider.ErrorEvent += SmsProvider_ErrorEvent;
+        }
+
+        private Task SmsProvider_ErrorEvent(object sender, ServiceExtender.Sms.Handlers.SmsEventArgs args)
+        {
+            if (args.Exception != null)
+                throw args.Exception;
+
+            return Task.CompletedTask;
         }
 
         private void EmailProvider_OnError(object sender, EmailSending.Events.SendEmailEventArgs args)
@@ -116,11 +127,7 @@ namespace ID.Host.Infrastracture.Services.Users
 
                 var confirmationToken = await _userManager.GenerateChangePhoneNumberTokenAsync(currentUser, newPhoneNumber);
 
-                // скоро будет отправка на sms
-
-                var smsProvider = _smsProviderFactory.Create(SmsProviderType.Devino);
-
-                await smsProvider.SendAsync(new SmsSendingMessage($"Ваш код подтверждения: {confirmationToken}", newPhoneNumber),
+                await _smsProvider.SendAsync(new SmsSendingMessage($"Ваш код подтверждения: {confirmationToken}", newPhoneNumber),
                                             new SmsRequestOptions("test", "12Qwaszx", "testChangePhone", false));
             }
         }

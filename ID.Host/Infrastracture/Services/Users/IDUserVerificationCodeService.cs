@@ -24,6 +24,7 @@ namespace ID.Host.Infrastracture.Services.Users
         protected readonly IClientRepository _clientRepository;
         protected readonly IWebHostEnvironment _webHostEnvironment;
         protected readonly ISmsProviderFactory _smsProviderFactory;
+        protected readonly ISmsProvider _smsProvider;
 
         public IDUserVerificationCodeService
             (IDUserManager userManager,
@@ -41,6 +42,16 @@ namespace ID.Host.Infrastracture.Services.Users
 
             _emailProvider.OnError += EmailProvider_OnError;
             _smsProviderFactory = smsProviderFactory ?? throw new ArgumentNullException(nameof(smsProviderFactory));
+            _smsProvider = smsProviderFactory.Create(SmsProviderType.Smsc);
+            _smsProvider.ErrorEvent += SmsProvider_ErrorEvent;
+        }
+
+        private Task SmsProvider_ErrorEvent(object sender, ServiceExtender.Sms.Handlers.SmsEventArgs args)
+        {
+            if (args.Exception != null)
+                throw args.Exception;
+
+            return Task.CompletedTask;
         }
 
         private void EmailProvider_OnError(object sender, EmailSending.Events.SendEmailEventArgs args)
@@ -110,9 +121,7 @@ namespace ID.Host.Infrastracture.Services.Users
                 ? await _clientRepository.FindAsync(iniciator.ClientId, token)
                 : DefaultClient.ServiceID;
 
-            var smsProvider = _smsProviderFactory.Create(SmsProviderType.RedSms);
-
-            await smsProvider.SendAsync
+            await _smsProvider.SendAsync
                 (new SmsSendingMessage($"Ваш код подтверждения: {currentCode}", "79251066154"),
                  new SmsRequestOptions("test", "12Qwaszx", "default", true));
         }
