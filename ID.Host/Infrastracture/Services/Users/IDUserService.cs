@@ -121,8 +121,7 @@ namespace ID.Host.Infrastracture.Services.Users
                 var smsProvider = _smsProviderFactory.Create(SmsProviderType.Devino);
 
                 await smsProvider.SendAsync(new SmsSendingMessage($"Ваш код подтверждения: {confirmationToken}", newPhoneNumber),
-                                            new SmsRequestIdentity("test", "12Qwaszx"),
-                                            new SmsRequestSettings("testChangePhone", false));
+                                            new SmsRequestOptions("test", "12Qwaszx", "testChangePhone", false));
             }
         }
         public override async Task<string> ResetPasswordAsync(string email, string? clientId = null, CancellationToken token = default)

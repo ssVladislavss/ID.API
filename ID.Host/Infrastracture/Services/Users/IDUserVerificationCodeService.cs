@@ -110,12 +110,11 @@ namespace ID.Host.Infrastracture.Services.Users
                 ? await _clientRepository.FindAsync(iniciator.ClientId, token)
                 : DefaultClient.ServiceID;
 
-            var smsProvider = _smsProviderFactory.Create(SmsProviderType.QuikTelecom);
+            var smsProvider = _smsProviderFactory.Create(SmsProviderType.RedSms);
 
             await smsProvider.SendAsync
                 (new SmsSendingMessage($"Ваш код подтверждения: {currentCode}", "79251066154"),
-                 new SmsRequestIdentity("test", "12Qwaszx"),
-                 new SmsRequestSettings("default", true));
+                 new SmsRequestOptions("test", "12Qwaszx", "default", true));
         }
 
         public virtual async Task VerifyCodeAsync(string userId, string currentCode, ISrvUser iniciator, CancellationToken token = default)

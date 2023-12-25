@@ -38,6 +38,7 @@ using ServiceExtender.Sms;
 using ServiceExtender.Sms.Abstractions;
 using ServiceExtender.Sms.Devino;
 using ServiceExtender.Sms.QuickTel;
+using ServiceExtender.Sms.RedSms;
 using System.IdentityModel.Tokens.Jwt;
 using System.Reflection;
 using System.Security.Claims;
@@ -107,6 +108,11 @@ builder.Services.Configure<QuickTelecomOptions>(options =>
 {
     options.DefaultSender = "testIdentity";
     options.AlwaysUseDefaultSender = true;
+});
+builder.Services.AddScoped<RedSmsProvider>();
+builder.Services.Configure<RedSmsOptions>(options =>
+{
+    
 });
 
 TemplateServiceConfiguration configurationTemplate = new()
