@@ -122,7 +122,7 @@ namespace ID.Host.Infrastracture.Services.Users
                 : DefaultClient.ServiceID;
 
             await _smsProvider.SendAsync
-                (new SmsSendingMessage($"Ваш код подтверждения: {currentCode}", "79251066154"),
+                (new SmsMessage($"Ваш код подтверждения: {currentCode}", "79251066154"),
                  new SmsRequestOptions("test", "12Qwaszx", "default", true));
         }
 

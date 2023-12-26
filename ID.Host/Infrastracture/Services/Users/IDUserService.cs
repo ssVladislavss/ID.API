@@ -127,7 +127,7 @@ namespace ID.Host.Infrastracture.Services.Users
 
                 var confirmationToken = await _userManager.GenerateChangePhoneNumberTokenAsync(currentUser, newPhoneNumber);
 
-                await _smsProvider.SendAsync(new SmsSendingMessage($"Ваш код подтверждения: {confirmationToken}", newPhoneNumber),
+                await _smsProvider.SendAsync(new SmsMessage($"Ваш код подтверждения: {confirmationToken}", newPhoneNumber),
                                             new SmsRequestOptions("test", "12Qwaszx", "testChangePhone", false));
             }
         }
@@ -169,6 +169,13 @@ namespace ID.Host.Infrastracture.Services.Users
                     if (currentUser != null)
                     {
                         var lockVerificationCode = currentUser.GenerateCode(10);
+
+                        if(await _userManager.GetAuthenticationTokenAsync
+                            (currentUser, IDConstants.Users.ConfirmationCodeProviders.IDProvider,
+                             IDConstants.Users.CodeNames.CodeBySetLockoutEnabled) != null)
+                            await _userManager.RemoveAuthenticationTokenAsync
+                                (currentUser, IDConstants.Users.ConfirmationCodeProviders.IDProvider,
+                                 IDConstants.Users.CodeNames.CodeBySetLockoutEnabled);
 
                         await _userManager.SetAuthenticationTokenAsync
                             (currentUser,
