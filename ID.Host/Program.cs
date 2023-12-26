@@ -34,16 +34,11 @@ using Microsoft.OpenApi.Models;
 using RazorEngine.Configuration;
 using RazorEngine.Templating;
 using RazorEngine.Text;
-using ServiceExtender.Sms;
-using ServiceExtender.Sms.Abstractions;
-using ServiceExtender.Sms.Devino;
-using ServiceExtender.Sms.QuickTel;
-using ServiceExtender.Sms.RedSms;
-using ServiceExtender.Sms.Smsc;
 using System.IdentityModel.Tokens.Jwt;
 using System.Reflection;
 using System.Security.Claims;
 using ServiceExtender.Sms.Extensions;
+using EmailSending.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -92,10 +87,12 @@ builder.Services.AddScoped<IVerificationService, IDUserVerificationCodeService>(
 
 builder.Services.AddExtenderLogging(ServiceLifetime.Singleton);
 
-builder.Services.AddScoped<IEmailProvider, EmailProvider>();
-builder.Services.Configure<SmtpOptions>(options =>
+builder.Services.ConfigureEmailNotification((services, config) =>
 {
-    builder.Configuration.GetSection("smtpOptions").Bind(options);
+    config.AddDefaultEmailProvider(ServiceLifetime.Scoped, options =>
+    {
+        builder.Configuration.GetSection("smtpOptions").Bind(options);
+    });
 });
 
 builder.Services.ConfigureSmsProviders((services, config) =>
