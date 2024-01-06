@@ -20,6 +20,9 @@ namespace ID.Core.Users
 
         public string GenerateCode(int codeLength)
         {
+            if(codeLength > 50)
+                throw new NotSupportedException($"the code length of more than 50 characters is not supported");
+
             string code = string.Empty;
             Random random = new();
 

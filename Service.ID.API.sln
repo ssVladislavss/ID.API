@@ -13,7 +13,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EmailSending", "..\..\Notif
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Builder.Messages.Html", "..\..\Notify\Notify.Builders\Builder.Messages.Html\Builder.Messages.Html.csproj", "{7DFCB3AE-9E4A-4B05-8544-10E1C55F3E0D}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ServiceExtender.Sms", "..\..\..\..\Common\ServiceExtender.Sms\ServiceExtender.Sms\ServiceExtender.Sms.csproj", "{A559C84C-49DB-463C-BDD9-D74B02F741B5}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ServiceExtender.Sms", "..\..\ServiceExtender.Sms\ServiceExtender.Sms\ServiceExtender.Sms.csproj", "{61D4BEBC-1037-4215-99A8-C2D39172F6BD}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -41,10 +41,10 @@ Global
 		{7DFCB3AE-9E4A-4B05-8544-10E1C55F3E0D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7DFCB3AE-9E4A-4B05-8544-10E1C55F3E0D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7DFCB3AE-9E4A-4B05-8544-10E1C55F3E0D}.Release|Any CPU.Build.0 = Release|Any CPU
-		{A559C84C-49DB-463C-BDD9-D74B02F741B5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{A559C84C-49DB-463C-BDD9-D74B02F741B5}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{A559C84C-49DB-463C-BDD9-D74B02F741B5}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{A559C84C-49DB-463C-BDD9-D74B02F741B5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{61D4BEBC-1037-4215-99A8-C2D39172F6BD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{61D4BEBC-1037-4215-99A8-C2D39172F6BD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{61D4BEBC-1037-4215-99A8-C2D39172F6BD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{61D4BEBC-1037-4215-99A8-C2D39172F6BD}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
