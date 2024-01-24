@@ -27,8 +27,4 @@
     <Folder Include="Extensions\" />
   </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\..\..\ServiceExtender.Sms\ServiceExtender.Sms\ServiceExtender.Sms.csproj" />
-  </ItemGroup>
-
 </Project>

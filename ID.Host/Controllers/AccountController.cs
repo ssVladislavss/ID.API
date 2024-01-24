@@ -93,11 +93,11 @@ namespace ID.Host.Controllers
         [HttpPost("code/send/sms")]
         public async Task<ActionResult<AjaxResult>> SendVerifyCodeOnSmsAsync(SendSmsCodeViewModel model)
         {
-            await _verificationService.SendCodeOnSmsAsync
-                (model.UserId,
-                 new SendCodeOnSmsData(model.Login, model.Password, model.IsTranslit, model.ProviderType, model.Sender),
-                 SrvUser,
-                 HttpContext.RequestAborted);
+            //await _verificationService.SendCodeOnSmsAsync
+            //    (model.UserId,
+            //     new SendCodeOnSmsData(model.Login, model.Password, model.IsTranslit, model.ProviderType, model.Sender),
+            //     SrvUser,
+            //     HttpContext.RequestAborted);
 
             return Ok(AjaxResult.Success());
         }
