@@ -24,7 +24,6 @@ namespace ID.Host.Infrastracture.Services.Users
         protected readonly IClientRepository _clientRepository;
         protected readonly IWebHostEnvironment _webHostEnvironment;
         protected readonly ISmsProviderFactory _smsProviderFactory;
-        protected readonly ISmsProvider _smsProvider;
 
         public IDUserVerificationCodeService
             (IDUserManager userManager,
@@ -42,8 +41,6 @@ namespace ID.Host.Infrastracture.Services.Users
 
             _emailProvider.OnError += EmailProvider_OnError;
             _smsProviderFactory = smsProviderFactory ?? throw new ArgumentNullException(nameof(smsProviderFactory));
-            _smsProvider = smsProviderFactory.Create(SmsProviderType.Smsc);
-            _smsProvider.ErrorEvent += SmsProvider_ErrorEvent;
         }
 
         private Task SmsProvider_ErrorEvent(object sender, ServiceExtender.Sms.Handlers.SmsEventArgs args)
@@ -95,7 +92,7 @@ namespace ID.Host.Infrastracture.Services.Users
             await _emailProvider.SendAsync(new EmailMessage(currentUser.Email, client?.ClientName ?? "Сервис идинтификации", body, "Ваш код подтверждения"), token);
         }
 
-        public virtual async Task SendCodeOnSmsAsync(string userId, ISrvUser iniciator, CancellationToken token = default)
+        public virtual async Task SendCodeOnSmsAsync(string userId, SendCodeOnSmsData sendData, ISrvUser iniciator, CancellationToken token = default)
         {
             var currentUser = await _userManager.FindByIdAsync(userId)
                 ?? throw new UserNotFoundException($"SendCodeOnSmsAsync: user (UserId - {userId}) was not found");
@@ -117,13 +114,16 @@ namespace ID.Host.Infrastracture.Services.Users
                     ($"SendCodeOnEmailAsync: user (UserId - {currentUser.Id}, Code - {currentCode}) the generated confirmation code could not be saved. " +
                     $"{string.Join(';', saveCodeResult.Errors.Select(x => $"{x.Code} - {x.Description}"))}");
 
-            Client? client = !string.IsNullOrEmpty(iniciator.ClientId) && !string.IsNullOrWhiteSpace(iniciator.ClientId)
-                ? await _clientRepository.FindAsync(iniciator.ClientId, token)
+            Client client = !string.IsNullOrEmpty(iniciator.ClientId) && !string.IsNullOrWhiteSpace(iniciator.ClientId)
+                ? await _clientRepository.FindAsync(iniciator.ClientId, token) ?? DefaultClient.ServiceID
                 : DefaultClient.ServiceID;
 
-            await _smsProvider.SendAsync
+            var smsProvider = _smsProviderFactory.Create(sendData.ProviderType);
+            smsProvider.ErrorEvent += SmsProvider_ErrorEvent;
+
+            await smsProvider.SendAsync
                 (new SmsMessage($"Ваш код подтверждения: {currentCode}", currentUser.PhoneNumber),
-                 new SmsRequestOptions("test", "12Qwaszx", "default", true));
+                 new SmsRequestOptions(sendData.Login, sendData.Password, sendData.Sender ?? client.ClientName, sendData.IsTranslit, true));
         }
 
         public virtual async Task VerifyCodeAsync(string userId, string currentCode, ISrvUser iniciator, CancellationToken token = default)
@@ -150,8 +150,29 @@ namespace ID.Host.Infrastracture.Services.Users
             }
 
             if (checkingCode != currentCode)
+            {
+                //var splittedCode = userSavedCode.Split('|');
+
+                //if(splittedCode.Length == 3)
+                //{
+                //    var tryCount = int.Parse(splittedCode[2]);
+
+                //    if (tryCount > 3)
+                //        throw new Exception();
+
+                //    tryCount++;
+
+                //    splittedCode[2] = tryCount.ToString();
+
+                //    userSavedCode = $"{splittedCode[0]}|{splittedCode[1]}|{splittedCode[2]}";
+
+                //    await _userManager.SetAuthenticationTokenAsync
+                //    (currentUser, IDConstants.Users.ConfirmationCodeProviders.IDProvider, IDConstants.Users.CodeNames.ConfirmationCode, userSavedCode);
+                //}
+
                 throw new UserVerifyCodeException($"VerifyCodeAsync: user (UserId - {currentUser.Id}, ConfirmationCode - {currentCode})" +
                     $" the received confirmation code from the user is not valid");
+            }
 
             await _userManager.RemoveAuthenticationTokenAsync
                 (currentUser, IDConstants.Users.ConfirmationCodeProviders.IDProvider, IDConstants.Users.CodeNames.ConfirmationCode);

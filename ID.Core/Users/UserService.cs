@@ -211,8 +211,8 @@ namespace ID.Core.Users
             var user = await _userManager.FindByIdAsync(userId)
                 ?? throw new UserNotFoundException($"FindByEmailAsync: user (UserId - {userId}) was not found");
 
-            if (await _userManager.IsInRoleAsync(user, IDConstants.Roles.RootAdmin) && !iniciator.IsInRole(IDConstants.Roles.RootAdmin))
-                throw new UserFindAccessException($"FindByEmailAsync: user (UserId - {user.Id}) the initiator (Email - {iniciator.Email}) does not have access to receive user data");
+            //if (await _userManager.IsInRoleAsync(user, IDConstants.Roles.RootAdmin) && !iniciator.IsInRole(IDConstants.Roles.RootAdmin))
+            //    throw new UserFindAccessException($"FindByEmailAsync: user (UserId - {user.Id}) the initiator (Email - {iniciator.Email}) does not have access to receive user data");
 
             var userRoleNames = await _userManager.GetRolesAsync(user);
             var userRoles = new List<IdentityRole>();

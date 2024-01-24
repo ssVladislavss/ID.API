@@ -90,11 +90,14 @@ namespace ID.Host.Controllers
             return Ok(AjaxResult.Success());
         }
 
-        [HttpGet("{userId}/code/send/sms")]
-        [Authorize(AuthenticationSchemes = IdentityServerAuthenticationDefaults.AuthenticationScheme)]
-        public async Task<ActionResult<AjaxResult>> SendVerifyCodeOnSmsAsync(string userId)
+        [HttpPost("code/send/sms")]
+        public async Task<ActionResult<AjaxResult>> SendVerifyCodeOnSmsAsync(SendSmsCodeViewModel model)
         {
-            await _verificationService.SendCodeOnSmsAsync(userId, SrvUser, CancellationToken);
+            await _verificationService.SendCodeOnSmsAsync
+                (model.UserId,
+                 new SendCodeOnSmsData(model.Login, model.Password, model.IsTranslit, model.ProviderType, model.Sender),
+                 SrvUser,
+                 HttpContext.RequestAborted);
 
             return Ok(AjaxResult.Success());
         }

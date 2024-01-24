@@ -51,7 +51,7 @@ namespace ID.Host.Controllers
         }
 
         [HttpGet("{userId}")]
-        [Authorize(AuthenticationSchemes = IdentityServerAuthenticationDefaults.AuthenticationScheme)]
+        //[Authorize(AuthenticationSchemes = IdentityServerAuthenticationDefaults.AuthenticationScheme)]
         public async Task<ActionResult<AjaxResult<UserViewModel>>> FindByIdAsync(string userId)
         {
             var userInfo = await _userService.FindByIdAsync(userId, SrvUser, HttpContext.RequestAborted);
