@@ -1,8 +1,5 @@
 using Builder.Messages.Html;
 using Builder.Messages.Html.Abstractions;
-using EmailSending;
-using EmailSending.Abstractions;
-using EmailSending.Configurations;
 using ID.Core;
 using ID.Core.ApiResources;
 using ID.Core.ApiResources.Abstractions;
