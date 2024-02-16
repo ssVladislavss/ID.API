@@ -62,7 +62,6 @@ namespace ID.Host.Controllers
         }
 
         [HttpGet("confirmation/phone")]
-        [ApiExplorerSettings(IgnoreApi = true)]
         public async Task<IActionResult> ConfirmPhoneAsync(string userId, string newPhoneNumber, string token)
         {
             await _userService.ConfirmPhoneNumberAsync(userId, newPhoneNumber, token, CancellationToken);
