@@ -8,7 +8,8 @@ namespace ID.Core.Roles.Default
         public static IdentityRole[] Roles
             => new[]
             {
-                RootAdminRole
+                RootAdminRole,
+                AdminRole
             };
 
         public static IdentityRole RootAdminRole
@@ -18,7 +19,19 @@ namespace ID.Core.Roles.Default
                 Name = IDConstants.Roles.RootAdmin,
                 NormalizedName = IDConstants.Roles.RootAdmin.ToUpper(),
             };
+        public static IdentityRole AdminRole
+            => new()
+            {
+                Id = "7619cbdc-892a-4cb3-8970-ab7dbf86d34e",
+                Name = IDConstants.Roles.Admin,
+                NormalizedName = IDConstants.Roles.Admin.ToUpper(),
+            };
         public static Claim[] RootAdminClaims
+            => new[]
+            {
+                new Claim(IDConstants.Roles.Claims.Types.RoleType, IDConstants.Roles.Claims.Values.Base)
+            };
+        public static Claim[] AdminClaims
             => new[]
             {
                 new Claim(IDConstants.Roles.Claims.Types.RoleType, IDConstants.Roles.Claims.Values.Base)

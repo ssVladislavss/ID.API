@@ -66,6 +66,7 @@
         public static class Roles
         {
             public const string RootAdmin = "root_admin";
+            public const string Admin = "admin";
 
             public static class Claims
             {

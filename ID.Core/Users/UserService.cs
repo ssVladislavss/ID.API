@@ -32,7 +32,7 @@ namespace ID.Core.Users
 
         public virtual async Task<CreateUserResult> AddAsync(CreateUserData data, ISrvUser iniciator, CancellationToken token = default)
         {
-            if (data.RoleNames.Any(x => x == IDConstants.Roles.RootAdmin) && !iniciator.IsInRole(IDConstants.Roles.RootAdmin))
+            if ((data.RoleNames.Any(x => x == IDConstants.Roles.RootAdmin) || data.RoleNames.Any(x => x == IDConstants.Roles.Admin)) && !iniciator.IsInRole(IDConstants.Roles.RootAdmin))
                 throw new UserAddAccessException($"AddAsync: user (Email - {data.User.Email}, Roles - {string.Join(';', data.RoleNames)}) " +
                     $"the user could not be registered because the initiator does not have rights to register system administrators " +
                     $"(Iniciator - {iniciator.Email}, ClientId - {iniciator.ClientId}, Roles - {string.Join(';', iniciator.Role ?? Enumerable.Empty<string>())})");

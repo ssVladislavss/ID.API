@@ -49,6 +49,29 @@ namespace ID.Core.Users
 
             if (!await userManager.IsInRoleAsync(user, role.Name))
                 await userManager.AddToRoleAsync(user, role.Name);
+
+            var adminRole = DefaultRole.AdminRole;
+            var adminRoleClaims = DefaultRole.AdminClaims;
+
+            var nowAdminRole = await roleManager.FindByIdAsync(adminRole.Id);
+            if (nowAdminRole == null)
+            {
+                await roleManager.CreateAsync(adminRole);
+
+                foreach (var adminRoleClaim in adminRoleClaims)
+                    await roleManager.AddClaimAsync(adminRole, adminRoleClaim);
+            }
+            else
+            {
+                adminRole = nowAdminRole;
+
+                var existsAdminRoleClaims = await roleManager.GetClaimsAsync(adminRole);
+                foreach (var adminClaim in existsAdminRoleClaims)
+                    await roleManager.RemoveClaimAsync(adminRole, adminClaim);
+
+                foreach (var adminRoleClaim in adminRoleClaims)
+                    await roleManager.AddClaimAsync(adminRole, adminRoleClaim);
+            }
         }
     }
 }
