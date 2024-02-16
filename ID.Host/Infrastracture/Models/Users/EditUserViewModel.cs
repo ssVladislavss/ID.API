@@ -13,6 +13,7 @@ namespace ID.Host.Infrastracture.Models.Users
         public string FirstName { get; set; } = string.Empty;
         [Required(ErrorMessage = "Поле - SecondName - обязательно к заполнению")]
         public string SecondName { get; set; } = string.Empty;
+        public DateTime? BirthDate { get; set; }
 
         public List<string> RoleNames { get; set; } = new List<string>();
         public List<ClaimViewModel> Claims { get; set; } = new List<ClaimViewModel>();

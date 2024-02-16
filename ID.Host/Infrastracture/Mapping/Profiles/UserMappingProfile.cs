@@ -40,6 +40,7 @@ namespace ID.Host.Infrastracture.Mapping.Profiles
                         LastName = data.LastName,
                         FirstName = data.FirstName,
                         SecondName = data.SecondName,
+                        BirthDate = data.BirthDate,
                         Id = data.UserId
                     };
 

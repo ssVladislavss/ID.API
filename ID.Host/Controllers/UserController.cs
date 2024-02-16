@@ -88,7 +88,7 @@ namespace ID.Host.Controllers
         [Authorize(AuthenticationSchemes = IdentityServerAuthenticationDefaults.AuthenticationScheme)]
         public async Task<ActionResult<AjaxResult<DateTimeOffset?>>> SetLockoutEnabledAsync(SetLockoutEnabledViewModel model)
         {
-            var setLockoutEnabledResult = await _userService.SetLockoutEnabledAsync(model.UserId, model.Enabled, SrvUser, CancellationToken);
+            var setLockoutEnabledResult = await _userService.SetLockoutEnabledAsync(model.UserId, model.Enabled, model.LockTime, SrvUser, CancellationToken);
 
             return Ok(AjaxResult<DateTimeOffset?>.Success(setLockoutEnabledResult));
         }

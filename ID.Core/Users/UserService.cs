@@ -362,22 +362,28 @@ namespace ID.Core.Users
                 throw new UserEditException($"UpdateAsync: user (Id - {data.User.Id}, Email - {data.User.Email}) error updating. " +
                     $"{string.Join(',', updateResult.Errors.Select(x => $"{x.Code} - {x.Description}"))}");
 
-            var currentUserClaims = await _userManager.GetClaimsAsync(currentUser);
-
-            if (currentUserClaims.Count > 0)
-                await _userManager.RemoveClaimsAsync(currentUser, currentUserClaims);
-
-            await _userManager.AddClaimsAsync(currentUser, data.Claims);
-
-            foreach (var roleName in data.RoleNames)
+            if (data.Claims.Any())
             {
-                var role = await _roleManager.FindByNameAsync(roleName)
-                    ?? throw new UserRoleNotFoundException($"UpdateAsync: role (RoleName - {roleName}) was not found");
+                var currentUserClaims = await _userManager.GetClaimsAsync(currentUser);
+
+                if (currentUserClaims.Count > 0)
+                    await _userManager.RemoveClaimsAsync(currentUser, currentUserClaims);
+
+                await _userManager.AddClaimsAsync(currentUser, data.Claims);
             }
 
-            var currentUserRoles = await _userManager.GetRolesAsync(currentUser);
-            await _userManager.RemoveFromRolesAsync(currentUser, currentUserRoles);
-            await _userManager.AddToRolesAsync(currentUser, data.RoleNames);
+            if (data.RoleNames.Any())
+            {
+                foreach (var roleName in data.RoleNames)
+                {
+                    var role = await _roleManager.FindByNameAsync(roleName)
+                        ?? throw new UserRoleNotFoundException($"UpdateAsync: role (RoleName - {roleName}) was not found");
+                }
+
+                var currentUserRoles = await _userManager.GetRolesAsync(currentUser);
+                await _userManager.RemoveFromRolesAsync(currentUser, currentUserRoles);
+                await _userManager.AddToRolesAsync(currentUser, data.RoleNames);
+            }
         }
         public virtual async Task SetLockStatusByVerifyCodeAsync(string userId, bool enabled, string confirmationCode, CancellationToken token = default)
         {
@@ -402,7 +408,7 @@ namespace ID.Core.Users
                         $"{string.Join(';', setLockedEndDateResult.Errors.Select(x => $"{x.Code} - {x.Description}"))}");
             }
         }
-        public virtual async Task<DateTimeOffset?> SetLockoutEnabledAsync(string userId, bool enabled, ISrvUser iniciator, CancellationToken token = default)
+        public virtual async Task<DateTimeOffset?> SetLockoutEnabledAsync(string userId, bool enabled, TimeSpan? lockTime, ISrvUser iniciator, CancellationToken token = default)
         {
             var currentUser = await _userManager.FindByIdAsync(userId)
                 ?? throw new UserSetLockoutEnabledException($"SetLockoutEnabledAsync: user (UserId - {userId}) was not found");
@@ -415,9 +421,9 @@ namespace ID.Core.Users
                 throw new UserSetLockoutEnabledException($"SetLockoutEnabledAsync: user (UserId - {currentUser.Id}) cannot be blocked. " +
                     $"{string.Join(';', setLockoutEnabledResult.Errors.Select(x => $"{x.Code} - {x.Description}"))}");
 
-            if (enabled)
+            if (enabled && lockTime.HasValue)
             {
-                var lockoutEndTime = DateTimeOffset.UtcNow.Add(TimeSpan.FromHours(1));
+                var lockoutEndTime = DateTimeOffset.UtcNow.Add(lockTime.Value);
 
                 var setLockedEndDateResult = await _userManager.SetLockoutEndDateAsync(currentUser, lockoutEndTime);
                 if (!setLockedEndDateResult.Succeeded)

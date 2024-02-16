@@ -23,7 +23,8 @@ namespace ID.Core.Users.Default
                 LastName = "Урасов",
                 FirstName = "Владислав",
                 SecondName = "Олегович",
-                UserName = "ura.so.v.ru@mail.ru"
+                UserName = "ura.so.v.ru@mail.ru",
+                BirthDate = new DateTime(1995, 10, 18)
             };
     }
 }

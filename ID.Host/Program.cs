@@ -332,6 +332,8 @@ builder.Services.AddFileDeterminantService(ServiceLifetime.Transient, configure 
 
 var app = builder.Build();
 
+AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+
 await Task.Run(async () =>
 {
     await ClientService.StartInitializerAsync(app.Services);

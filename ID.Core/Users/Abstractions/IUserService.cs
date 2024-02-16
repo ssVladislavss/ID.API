@@ -21,6 +21,6 @@ namespace ID.Core.Users.Abstractions
         Task UpdateAsync(EditUserData data, ISrvUser iniciator, CancellationToken token = default);
         Task DeleteAsync(string userId, ISrvUser iniciator, CancellationToken token = default);
         Task SetLockStatusByVerifyCodeAsync(string userId, bool enabled, string confirmationCode, CancellationToken token = default);
-        Task<DateTimeOffset?> SetLockoutEnabledAsync(string userId, bool enabled, ISrvUser iniciator, CancellationToken token = default);
+        Task<DateTimeOffset?> SetLockoutEnabledAsync(string userId, bool enabled, TimeSpan? lockTime, ISrvUser iniciator, CancellationToken token = default);
     }
 }
