@@ -12,8 +12,10 @@ using IdentityServer4.Models;
 using ISDS.ServiceExtender.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Options;
+using ServiceExtender.Sms;
 using ServiceExtender.Sms.Abstractions;
 using ServiceExtender.Sms.Models;
+using ServiceExtender.Sms.Smsc;
 
 namespace ID.Host.Infrastracture.Services.Users
 {
@@ -23,7 +25,6 @@ namespace ID.Host.Infrastracture.Services.Users
         protected readonly IHtmlBuilder _htmlBuilder;
         protected readonly IWebHostEnvironment _webHostEnvironment;
         protected readonly ISmsProviderFactory _smsProviderFactory;
-        protected readonly ISmsProvider _smsProvider;
 
         public IDUserService
             (IDUserManager userManager,
@@ -42,8 +43,6 @@ namespace ID.Host.Infrastracture.Services.Users
 
             _emailProvider.OnError += EmailProvider_OnError;
             _smsProviderFactory = smsProviderFactory ?? throw new ArgumentNullException(nameof(smsProviderFactory));
-            _smsProvider = smsProviderFactory.Create(SmsProviderType.RedSms);
-            _smsProvider.ErrorEvent += SmsProvider_ErrorEvent;
         }
 
         private Task SmsProvider_ErrorEvent(object sender, ServiceExtender.Sms.Handlers.SmsEventArgs args)
@@ -114,7 +113,7 @@ namespace ID.Host.Infrastracture.Services.Users
                 }
             }
         }
-        public override async Task SetPhoneNumberAsync(string userId, string newPhoneNumber, ISrvUser iniciator, CancellationToken token = default)
+        public override async Task SetPhoneNumberAsync(string userId, string newPhoneNumber, SmsProviderType providerType, SmsRequestOptions smsRequestOptions, ISrvUser iniciator, CancellationToken token = default)
         {
             Client? client = !string.IsNullOrWhiteSpace(iniciator.ClientId) && !string.IsNullOrEmpty(iniciator.ClientId)
                 ? await _clientRepository.FindAsync(iniciator.ClientId, token)
@@ -127,8 +126,10 @@ namespace ID.Host.Infrastracture.Services.Users
 
                 var confirmationToken = await _userManager.GenerateChangePhoneNumberTokenAsync(currentUser, newPhoneNumber);
 
-                await _smsProvider.SendAsync(new SmsMessage($"Ваш код подтверждения: {confirmationToken}", newPhoneNumber),
-                                            new SmsRequestOptions("test", "12Qwaszx", "testChangePhone", false));
+                var smsProvider = _smsProviderFactory.Create(providerType);
+                smsProvider.ErrorEvent += SmsProvider_ErrorEvent;
+
+                await smsProvider.SendAsync(new SmsMessage($"Ваш код подтверждения: {confirmationToken}", newPhoneNumber), smsRequestOptions);
             }
         }
         public override async Task<string> ResetPasswordAsync(string email, string? clientId = null, CancellationToken token = default)

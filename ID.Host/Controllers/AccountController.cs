@@ -1,4 +1,5 @@
-﻿using ID.Core.Users;
+﻿using ID.Core.Clients.Default;
+using ID.Core.Users;
 using ID.Core.Users.Abstractions;
 using ID.Host.Infrastracture;
 using ID.Host.Infrastracture.Models.Account;
@@ -11,6 +12,7 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using ServiceExtender.Sms.Models;
 using System.Net;
 
 namespace ID.Host.Controllers
@@ -40,6 +42,7 @@ namespace ID.Host.Controllers
         }
 
         [HttpGet("logout")]
+        [ApiExplorerSettings(IgnoreApi = true)]
         public async Task<IActionResult> LogoutAsync(string logoutId)
         {
             var logout = await _interactionService.GetLogoutContextAsync(logoutId);
@@ -50,6 +53,7 @@ namespace ID.Host.Controllers
         }
 
         [HttpGet("confirmation/email")]
+        [ApiExplorerSettings(IgnoreApi = true)]
         public async Task<IActionResult> ConfirmEmailAsync(string userId, string newEmail, string token)
         {
             await _userService.ConfirmEmailAsync(userId, newEmail, token, CancellationToken);
@@ -58,6 +62,7 @@ namespace ID.Host.Controllers
         }
 
         [HttpGet("confirmation/phone")]
+        [ApiExplorerSettings(IgnoreApi = true)]
         public async Task<IActionResult> ConfirmPhoneAsync(string userId, string newPhoneNumber, string token)
         {
             await _userService.ConfirmPhoneNumberAsync(userId, newPhoneNumber, token, CancellationToken);
@@ -66,6 +71,7 @@ namespace ID.Host.Controllers
         }
 
         [HttpGet("confirmation/email/lock")]
+        [ApiExplorerSettings(IgnoreApi = true)]
         public async Task<IActionResult> LockByClickInEmailMessageAsync(string userId, string code)
         {
             await _userService.SetLockStatusByVerifyCodeAsync(userId, true, code, CancellationToken);
@@ -74,6 +80,7 @@ namespace ID.Host.Controllers
         }
 
         [HttpGet("confirmation/password/reset")]
+        [ApiExplorerSettings(IgnoreApi = true)]
         public async Task<ActionResult<AjaxResult>> ConfirmResetPasswordAsync(string userId, string? clientId, string token)
         {
             await _userService.ConfirmResetPasswordAsync(userId, token, clientId, CancellationToken);
@@ -93,16 +100,21 @@ namespace ID.Host.Controllers
         [HttpPost("code/send/sms")]
         public async Task<ActionResult<AjaxResult>> SendVerifyCodeOnSmsAsync(SendSmsCodeViewModel model)
         {
-            //await _verificationService.SendCodeOnSmsAsync
-            //    (model.UserId,
-            //     new SendCodeOnSmsData(model.Login, model.Password, model.IsTranslit, model.ProviderType, model.Sender),
-            //     SrvUser,
-            //     HttpContext.RequestAborted);
+            await _verificationService.SendCodeOnSmsAsync
+                (model.UserId, model.ProviderType,
+                 new SmsRequestOptions(
+                         model.Login,
+                         model.Password,
+                         model.Sender ?? DefaultClient.ServiceID.ClientName,
+                         model.IsTranslit),
+                 SrvUser,
+                 HttpContext.RequestAborted);
 
             return Ok(AjaxResult.Success());
         }
 
         [HttpPost("login")]
+        [ApiExplorerSettings(IgnoreApi = true)]
         public async Task<IActionResult> LoginAsync(LoginViewModel model)
         {
             if (!ModelState.IsValid)
@@ -164,7 +176,13 @@ namespace ID.Host.Controllers
         [Authorize(AuthenticationSchemes = IdentityServerAuthenticationDefaults.AuthenticationScheme)]
         public async Task<ActionResult<AjaxResult>> ChangePhoneAsync(ChangePhoneNumberViewModel model)
         {
-            await _userService.SetPhoneNumberAsync(model.UserId, model.PhoneNumber, SrvUser, CancellationToken);
+            await _userService.SetPhoneNumberAsync(
+                model.UserId,
+                model.PhoneNumber,
+                model.ProviderType,
+                new SmsRequestOptions(model.Login, model.Password, model.Sender ?? DefaultClient.ServiceID.ClientName, model.IsTranslit),
+                SrvUser,
+                CancellationToken);
 
             return Ok(AjaxResult.Success());
         }

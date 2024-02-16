@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using ServiceExtender.Sms.Models;
+using System.ComponentModel.DataAnnotations;
 
 namespace ID.Host.Infrastracture.Models.Users
 {
@@ -8,5 +9,14 @@ namespace ID.Host.Infrastracture.Models.Users
         public string UserId { get; set; } = string.Empty;
         [Required(ErrorMessage = "Поле - PhoneNumber - обязательно к заполнению")]
         public string PhoneNumber { get; set; } = string.Empty;
+
+        public string? Sender { get; set; }
+        public bool IsTranslit { get; set; }
+        [Required(ErrorMessage = "Поле - Login - обязательно к заполнению")]
+        public string Login { get; set; } = string.Empty;
+        [Required(ErrorMessage = "Поле - Password - обязательно к заполнению")]
+        public string Password { get; set; } = string.Empty;
+        [EnumDataType(typeof(SmsProviderType), ErrorMessage = "Некорректное значение поля - ProviderType")]
+        public SmsProviderType ProviderType { get; set; }
     }
 }

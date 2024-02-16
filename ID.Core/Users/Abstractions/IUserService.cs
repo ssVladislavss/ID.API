@@ -1,4 +1,5 @@
 ﻿using ISDS.ServiceExtender.Http;
+using ServiceExtender.Sms.Models;
 
 namespace ID.Core.Users.Abstractions
 {
@@ -16,7 +17,7 @@ namespace ID.Core.Users.Abstractions
         Task SetEmailAsync(string userId, string newEmail, ISrvUser iniciator, CancellationToken token = default);
         Task<string> ResetPasswordAsync(string email, string? clientId = null, CancellationToken token = default);
         Task ChangePasswordAsync(string userId, string currentPassword, string newPassword, ISrvUser iniciator, CancellationToken token = default);
-        Task SetPhoneNumberAsync(string userId, string newPhoneNumber, ISrvUser iniciator, CancellationToken token = default);
+        Task SetPhoneNumberAsync(string userId, string newPhoneNumber, SmsProviderType providerType, SmsRequestOptions smsRequestOptions, ISrvUser iniciator, CancellationToken token = default);
         Task UpdateAsync(EditUserData data, ISrvUser iniciator, CancellationToken token = default);
         Task DeleteAsync(string userId, ISrvUser iniciator, CancellationToken token = default);
         Task SetLockStatusByVerifyCodeAsync(string userId, bool enabled, string confirmationCode, CancellationToken token = default);

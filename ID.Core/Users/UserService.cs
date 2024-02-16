@@ -7,6 +7,7 @@ using ISDS.ServiceExtender.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using ServiceExtender.Sms.Models;
 
 namespace ID.Core.Users
 {
@@ -100,7 +101,7 @@ namespace ID.Core.Users
 
             return newPassword;
         }
-        public virtual async Task SetPhoneNumberAsync(string userId, string newPhoneNumber, ISrvUser iniciator, CancellationToken token = default)
+        public virtual async Task SetPhoneNumberAsync(string userId, string newPhoneNumber, SmsProviderType providerType, SmsRequestOptions smsRequestOptions, ISrvUser iniciator, CancellationToken token = default)
         {
             var currentUser = await _userManager.FindByIdAsync(userId)
                 ?? throw new UserChangePhoneNumberException($"SetPhoneNumberAsync: user (UserId - {userId}, NewPhoneNumber - {newPhoneNumber}) was not found");
