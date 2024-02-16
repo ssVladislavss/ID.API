@@ -62,11 +62,11 @@ namespace ID.Host.Controllers
         }
 
         [HttpGet("confirmation/phone")]
-        public async Task<IActionResult> ConfirmPhoneAsync(string userId, string newPhoneNumber, string token)
+        public async Task<ActionResult<AjaxResult>> ConfirmPhoneAsync(string userId, string newPhoneNumber, string token)
         {
             await _userService.ConfirmPhoneNumberAsync(userId, newPhoneNumber, token, CancellationToken);
 
-            return Redirect("/Account/Phone/Confirmed");
+            return Ok(AjaxResult.Success());
         }
 
         [HttpGet("confirmation/email/lock")]
