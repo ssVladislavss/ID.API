@@ -114,7 +114,7 @@ namespace ID.Core.Clients
         }
         public virtual async Task RemoveAsync(string clientId, ISrvUser iniciator, CancellationToken token = default)
         {
-            if (!iniciator.CheckAccess())
+            if (!iniciator.IsInRole(IDConstants.Roles.RootAdmin))
                 throw new ClientRemoveAccessException($"RemoveAsync: user (Iniciator - {iniciator.Id}) does not have access to delete client (ClientId - {clientId})");
 
             if (DefaultClient.Clients.Any(x => x.ClientId == clientId))

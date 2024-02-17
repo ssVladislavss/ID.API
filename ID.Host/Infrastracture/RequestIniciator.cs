@@ -28,7 +28,6 @@ namespace ID.Host.Infrastracture
         public override string? Email => FindFirst(JwtClaimTypes.Email)?.Value;
         public override string? Phone => FindFirst(JwtClaimTypes.PhoneNumber)?.Value;
         public override string? FullName => FindFirst(JwtClaimTypes.FamilyName)?.Value + " " + FindFirst(JwtClaimTypes.GivenName)?.Value + " " + FindFirst(JwtClaimTypes.MiddleName)?.Value;
-        public override int? OrganizationId => null;
         public override string[]? Role
         {
             get
@@ -41,16 +40,9 @@ namespace ID.Host.Infrastracture
             }
         }
         public override string? ClientType => FindFirst("client_type")?.Value;
-        public override int? ClientOrgId => null;
         public override string? ClientId => FindFirst("client_id")?.Value;
         public override string? ClientName => FindFirst("client_name")?.Value;
         public string? CurrentToken => FindFirst("access_token")?.Value;
-
-        public override bool CheckAccess()
-            => IsInRole(IDConstants.Roles.RootAdmin);
-
-        public override bool CheckAccess(object organizationId)
-            => true;
 
         public override string ToString()
         {

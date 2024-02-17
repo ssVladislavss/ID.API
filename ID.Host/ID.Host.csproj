@@ -168,6 +168,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Builder.Messages.Html" Version="1.0.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="6.0.25">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -176,13 +177,11 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+    <PackageReference Include="ServiceExtender.Email" Version="1.0.0" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\Notify\Notify.Builders\Builder.Messages.Html\Builder.Messages.Html.csproj" />
-    <ProjectReference Include="..\..\..\Notify\Notify.Email\EmailSending\EmailSending.csproj" />
-    <ProjectReference Include="..\..\..\ServiceExtender.Sms\ServiceExtender.Sms\ServiceExtender.Sms.csproj" />
     <ProjectReference Include="..\ID.Core\ID.Core.csproj" />
     <ProjectReference Include="..\ID.Data\ID.Data.csproj" />
   </ItemGroup>
