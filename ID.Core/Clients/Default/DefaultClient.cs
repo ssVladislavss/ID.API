@@ -7,7 +7,13 @@ namespace ID.Core.Clients.Default
     public class DefaultClient
     {
         public static Client[] Clients
-            => new[] { ServiceID, ServiceIDUI };
+            => new[] 
+            { 
+                ServiceID,
+                ServiceIDUI,
+                OnlineSaleAdminPanel,
+                OnlineSaleApiGateway
+            };
         public static Client ServiceID
             => new()
             {
@@ -69,6 +75,87 @@ namespace ID.Core.Clients.Default
                     IdentityServerConstants.StandardScopes.OfflineAccess,
                     IDConstants.ApiScopes.Default.Names.ServiceIDApiName,
                     IDConstants.ApiScopes.Default.Names.ServiceIDUIName
+                }
+            };
+        public static Client OnlineSaleAdminPanel
+            => new()
+            {
+                ClientName = IDConstants.Client.Default.Names.OnlineSaleAdminPanel,
+                Enabled = true,
+                Claims = {
+                    new(IDConstants.Client.Claims.Types.ClientType, IDConstants.Client.Claims.Values.Base),
+                    new(IDConstants.Client.Claims.Types.ClientName, IDConstants.Client.Default.Names.OnlineSaleAdminPanel)
+                },
+
+                ClientId = IDConstants.Client.Default.Ids.OnlineSaleAdminPanel,
+                ClientSecrets = { new Secret(IDConstants.Client.Default.Secrets.OnlineSaleAdminPanel.ToSha256(), IDConstants.Client.Default.Secrets.OnlineSaleAdminPanel) },
+                AllowedGrantTypes = GrantTypes.ResourceOwnerPassword,
+                AllowedCorsOrigins = { "https://localhost:7268" },
+                RedirectUris = { },
+                PostLogoutRedirectUris = { },
+                AlwaysIncludeUserClaimsInIdToken = true,
+                RequireConsent = false,
+                AllowOfflineAccess = true,
+                AlwaysSendClientClaims = true,
+                UpdateAccessTokenClaimsOnRefresh = true,
+                AllowedScopes =
+                {
+                    IdentityServerConstants.StandardScopes.OpenId,
+                    IdentityServerConstants.StandardScopes.Profile,
+                    IdentityServerConstants.StandardScopes.Email,
+                    IdentityServerConstants.StandardScopes.OfflineAccess,
+                    IDConstants.ApiScopes.Default.Names.ServiceIDApiName,
+                    IDConstants.ApiScopes.Default.Names.OnlineSaleApiGateway,
+                    IDConstants.ApiScopes.Default.Names.OnlineSaleAdminPanel,
+
+                    IDConstants.ApiScopes.Default.Names.OnlineSaleFiscalHost,
+                    IDConstants.ApiScopes.Default.Names.OnlineSaleLoyaltyHost,
+                    IDConstants.ApiScopes.Default.Names.OnlineSalePaymentHost,
+                    IDConstants.ApiScopes.Default.Names.OnlineSaleOrderHost,
+                    IDConstants.ApiScopes.Default.Names.OnlineSaleOrganizationHost,
+                    IDConstants.ApiScopes.Default.Names.OnlineSaleSiteHost,
+                    IDConstants.ApiScopes.Default.Names.OnlineSaleEmailHost,
+                    IDConstants.ApiScopes.Default.Names.OnlineSaleSmsHost,
+                }
+            };
+        public static Client OnlineSaleApiGateway
+            => new()
+            {
+                ClientName = IDConstants.Client.Default.Names.OnlineSaleApiGateway,
+                Enabled = true,
+                Claims = {
+                    new(IDConstants.Client.Claims.Types.ClientType, IDConstants.Client.Claims.Values.Base),
+                    new(IDConstants.Client.Claims.Types.ClientName, IDConstants.Client.Default.Names.OnlineSaleApiGateway)
+                },
+
+                ClientId = IDConstants.Client.Default.Ids.OnlineSaleApiGateway,
+                ClientSecrets = { new Secret(IDConstants.Client.Default.Secrets.OnlineSaleApiGateway.ToSha256(), IDConstants.Client.Default.Secrets.OnlineSaleApiGateway) },
+                AllowedGrantTypes = GrantTypes.ResourceOwnerPasswordAndClientCredentials,
+                AllowedCorsOrigins = { "https://localhost:7181" },
+                RedirectUris = { },
+                PostLogoutRedirectUris = { },
+                AlwaysIncludeUserClaimsInIdToken = true,
+                RequireConsent = false,
+                AllowOfflineAccess = true,
+                AlwaysSendClientClaims = true,
+                UpdateAccessTokenClaimsOnRefresh = true,
+                AllowedScopes =
+                {
+                    IdentityServerConstants.StandardScopes.OpenId,
+                    IdentityServerConstants.StandardScopes.Profile,
+                    IdentityServerConstants.StandardScopes.Email,
+                    IdentityServerConstants.StandardScopes.OfflineAccess,
+                    IDConstants.ApiScopes.Default.Names.ServiceIDApiName,
+                    IDConstants.ApiScopes.Default.Names.OnlineSaleApiGateway,
+
+                    IDConstants.ApiScopes.Default.Names.OnlineSaleFiscalHost,
+                    IDConstants.ApiScopes.Default.Names.OnlineSaleLoyaltyHost,
+                    IDConstants.ApiScopes.Default.Names.OnlineSalePaymentHost,
+                    IDConstants.ApiScopes.Default.Names.OnlineSaleOrderHost,
+                    IDConstants.ApiScopes.Default.Names.OnlineSaleOrganizationHost,
+                    IDConstants.ApiScopes.Default.Names.OnlineSaleSiteHost,
+                    IDConstants.ApiScopes.Default.Names.OnlineSaleEmailHost,
+                    IDConstants.ApiScopes.Default.Names.OnlineSaleSmsHost,
                 }
             };
     }
