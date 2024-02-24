@@ -17,6 +17,7 @@
     <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="6.0.25" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Proxies" Version="6.0.25" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="6.0.22" />
+    <PackageReference Include="OnlineSales.Access.Data" Version="1.0.0" />
     <PackageReference Include="ServiceExtender.Application" Version="1.0.2" />
     <PackageReference Include="ServiceExtender.Extensions" Version="1.0.0" />
     <PackageReference Include="ServiceExtender.Http" Version="1.0.7" />

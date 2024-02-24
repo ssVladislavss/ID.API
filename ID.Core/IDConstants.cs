@@ -15,7 +15,7 @@
                 }
                 public static class Names
                 {
-                    public const string ServiceIdApi = "Входные точки управления сервисом идентификации";
+                    public const string ServiceIdApi = "Сервис идентификации";
                     public const string ServiceIdAdministrationUI = "Панель управления сервисом идентификации";
                     public const string OnlineSaleAdminPanel = "Панель управления сервисом онлайн продаж";
                     public const string OnlineSaleApiGateway = "Входные точки управления сервисом онлайн продаж";

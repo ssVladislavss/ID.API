@@ -41,6 +41,7 @@ namespace ID.Host.Infrastracture.Mapping.Profiles
                         FirstName = data.FirstName,
                         SecondName = data.SecondName,
                         BirthDate = data.BirthDate,
+                        AvailableFunctionality = data.AvailableFunctionality?.Select(x => (int)x)?.ToList(),
                         Id = data.UserId
                     };
 

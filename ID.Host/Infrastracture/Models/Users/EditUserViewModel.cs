@@ -1,4 +1,5 @@
 ﻿using ID.Host.Infrastracture.Models.Claims;
+using OnlineSales.Access.Data;
 using System.ComponentModel.DataAnnotations;
 
 namespace ID.Host.Infrastracture.Models.Users
@@ -17,5 +18,6 @@ namespace ID.Host.Infrastracture.Models.Users
 
         public List<string> RoleNames { get; set; } = new List<string>();
         public List<ClaimViewModel> Claims { get; set; } = new List<ClaimViewModel>();
+        public List<Functional>? AvailableFunctionality { get; set; } = new List<Functional>();
     }
 }

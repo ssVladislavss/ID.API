@@ -1,6 +1,7 @@
 ﻿using ID.Core.Users;
 using ID.Host.Infrastracture.Models.Claims;
 using ID.Host.Infrastracture.Models.Roles;
+using OnlineSales.Access.Data;
 
 namespace ID.Host.Infrastracture.Models.Users
 {
@@ -20,6 +21,7 @@ namespace ID.Host.Infrastracture.Models.Users
         public DateTimeOffset? LockedEndDate { get; set; }
         public IEnumerable<RoleViewModel> Roles { get; set; }
         public IEnumerable<ClaimViewModel> Claims { get; set; }
+        public IEnumerable<Functional> AvailableFunctionality { get; set; }
 
         public UserViewModel(UserID user)
         {
@@ -37,6 +39,7 @@ namespace ID.Host.Infrastracture.Models.Users
             LockedEndDate = user.LockoutEnd;
             Roles = Enumerable.Empty<RoleViewModel>();
             Claims = Enumerable.Empty<ClaimViewModel>();
+            AvailableFunctionality = Enumerable.Empty<Functional>();
         }
 
         public UserViewModel(UserInfo userInfo)
@@ -55,6 +58,7 @@ namespace ID.Host.Infrastracture.Models.Users
             LockedEndDate = userInfo.User.LockoutEnd;
             Roles = userInfo.Roles.Select(x => new RoleViewModel(x));
             Claims = userInfo.Claims.Select(x => new ClaimViewModel() { Type = x.Type, Value = x.Value });
+            AvailableFunctionality = userInfo.User.AvailableFunctionality?.Select(x => (Functional)x) ?? Enumerable.Empty<Functional>();
         }
 
         public UserViewModel(CreateUserResult createResult)
@@ -73,6 +77,7 @@ namespace ID.Host.Infrastracture.Models.Users
             LockedEndDate = createResult.CreatedUser.LockoutEnd;
             Roles = createResult.UserRoles.Select(x => new RoleViewModel(x));
             Claims = Enumerable.Empty<ClaimViewModel>();
+            AvailableFunctionality = createResult.CreatedUser.AvailableFunctionality?.Select(x => (Functional)x) ?? Enumerable.Empty<Functional>();
         }
     }
 }
