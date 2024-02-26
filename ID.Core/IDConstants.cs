@@ -108,6 +108,7 @@
         {
             public const string RootAdmin = "root_admin";
             public const string Admin = "admin";
+            public const string Customer = "customer";
 
             public static class Claims
             {

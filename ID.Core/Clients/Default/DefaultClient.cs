@@ -1,11 +1,19 @@
 ﻿using IdentityModel;
 using IdentityServer4;
 using IdentityServer4.Models;
+using Microsoft.Extensions.Configuration;
 
 namespace ID.Core.Clients.Default
 {
     public class DefaultClient
     {
+        private static IConfiguration _configuration;
+
+        public DefaultClient(IConfiguration configuration)
+        {
+            _configuration = configuration;
+        }
+
         public static Client[] Clients
             => new[] 
             { 

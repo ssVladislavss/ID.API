@@ -36,6 +36,7 @@ using System.Reflection;
 using System.Security.Claims;
 using ServiceExtender.Sms.Extensions;
 using EmailSending.Extensions;
+using ID.Core.Clients.Default;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -329,6 +330,8 @@ builder.Services.AddFileDeterminantService(ServiceLifetime.Transient, configure 
         Host = "localhost:44338"
     });
 });
+
+_ = new DefaultClient(builder.Configuration);
 
 var app = builder.Build();
 
