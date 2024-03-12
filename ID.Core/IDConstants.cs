@@ -1,4 +1,6 @@
-﻿namespace ID.Core
+﻿using OnlineSales.Access.Data;
+
+namespace ID.Core
 {
     public class IDConstants
     {
@@ -61,6 +63,7 @@
                     public const string OnlineSaleProductHost = "online_sales_product";
                     public const string OnlineSaleEmailHost = "online_sales_email";
                     public const string OnlineSaleSmsHost = "online_sales_sms";
+                    public const string OnlineSaleCartHost = "online_sales_cart_host";
                 }
             }
         }
@@ -84,6 +87,7 @@
                     public const string OnlineSaleProductHost = "online_sales_product";
                     public const string OnlineSaleEmailHost = "online_sales_email";
                     public const string OnlineSaleSmsHost = "online_sales_sms";
+                    public const string OnlineSaleCartHost = "online_sales_cart";
                 }
                 public static class Secrets
                 {
@@ -101,6 +105,7 @@
                     public const string OnlineSaleProductHost = "8e42e3a6afab475799bd809861784a48";
                     public const string OnlineSaleEmailHost = "89496f2bdf4c481fbb00fb75ac7fba22";
                     public const string OnlineSaleSmsHost = "71266cafebf14670b09d4ec1753d0d7c";
+                    public const string OnlineSaleCartHost = "320407ef6ef047888be7c0fa5e68df08";
                 }
             }
         }

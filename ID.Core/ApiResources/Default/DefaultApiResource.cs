@@ -20,7 +20,8 @@ namespace ID.Core.ApiResources.Default
                 OnlineSalesSiteHost,
                 OnlineSalesProductHost,
                 OnlineSalesEmailHost,
-                OnlineSalesSmsHost
+                OnlineSalesSmsHost,
+                OnlineSalesCartHost
             };
         public static IDApiResource ServiceID
             => new(0, new(IDConstants.ApiResources.Default.Names.ServiceIDApiName, "Service_ID_API")
@@ -195,6 +196,20 @@ namespace ID.Core.ApiResources.Default
             {
                 Scopes = { IDConstants.ApiScopes.Default.Names.OnlineSaleSmsHost },
                 ApiSecrets = { new Secret(IDConstants.ApiResources.Default.Secrets.OnlineSaleSmsHost.ToSha256()) },
+                UserClaims =
+                {
+                    JwtClaimTypes.Name,
+                    JwtClaimTypes.Role,
+                    JwtClaimTypes.Subject,
+                    JwtClaimTypes.PreferredUserName,
+                    JwtClaimTypes.Email
+                }
+            });
+        public static IDApiResource OnlineSalesCartHost
+            => new(0, new(IDConstants.ApiResources.Default.Names.OnlineSaleCartHost, "Сервис управления корзиной клиента")
+            {
+                Scopes = { IDConstants.ApiScopes.Default.Names.OnlineSaleCartHost },
+                ApiSecrets = { new Secret(IDConstants.ApiResources.Default.Secrets.OnlineSaleCartHost.ToSha256()) },
                 UserClaims =
                 {
                     JwtClaimTypes.Name,

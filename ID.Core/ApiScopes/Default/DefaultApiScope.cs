@@ -20,7 +20,8 @@ namespace ID.Core.ApiScopes.Default
                 OnlineSalesSiteHost,
                 OnlineSalesProductHost,
                 OnlineSalesEmailHost,
-                OnlineSalesSmsHost
+                OnlineSalesSmsHost,
+                OnlineSalesCartHost
             };
         public static ApiScope ServiceID
             => new(IDConstants.ApiScopes.Default.Names.ServiceIDApiName, "Service_ID_API",
@@ -145,6 +146,16 @@ namespace ID.Core.ApiScopes.Default
                     });
         public static ApiScope OnlineSalesSmsHost
             => new(IDConstants.ApiResources.Default.Names.OnlineSaleSmsHost, "Сервис управления смс рассылкой",
+                    new[]
+                    {
+                        JwtClaimTypes.Name,
+                        JwtClaimTypes.Role,
+                        JwtClaimTypes.Email,
+                        JwtClaimTypes.Subject,
+                        JwtClaimTypes.PreferredUserName
+                    });
+        public static ApiScope OnlineSalesCartHost
+            => new(IDConstants.ApiResources.Default.Names.OnlineSaleCartHost, "Сервис управления корзиной клиента",
                     new[]
                     {
                         JwtClaimTypes.Name,

@@ -7,11 +7,11 @@ namespace ID.Core.Clients.Default
 {
     public class DefaultClient
     {
-        private static IConfiguration _configuration;
+        private static IConfiguration _configuration = default!;
 
         public DefaultClient(IConfiguration configuration)
         {
-            _configuration = configuration;
+            _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
         }
 
         public static Client[] Clients
